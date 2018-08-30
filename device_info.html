@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>外设</title>
+  <!-- <link rel="stylesheet" href="./css/jquery-ui.css"> -->
+  <!-- <link rel="stylesheet" href="./css/bootstrap.min.css" > -->
+  <!-- <script src="./js/jquery-1.12.4.js"></script> -->
+  <!-- <script src="js/vue.min.js"></script> -->
+  <!-- <script src="./js/jquery-ui.js"></script>
+  <script src="./js/FileSaver.min.js"></script> -->
+ 
+<style>
+
+.title-header {
+      display: block;
+      width: 88%;
+      border-bottom: solid 1px #f5f5f5;
+      padding-bottom:6px;
+      font-size: 16px;
+      line-height: 1.5em;
+      margin-top:20px;
+
+    }
+    .branch-div {
+      margin-top: 40px;
+      margin-bottom: 40px;
+    }
+    .branch-section{
+      margin-bottom: 30px;
+    }
+    .branch-section:last-child{
+      padding-bottom: 60px;
+    }
+  span.error{display:none;color:firebrick;position: absolute;padding: 2px;text-align: center; background: #fefefe;
+    border: 1px solid #5e5e5e;margin-left: 5%;font-size: 0.8em}
+ .sm-control{max-width:100px; display: inline-block;height: 30px;margin-top: 5px};
+  #showlist li {  padding: 1px;  width: 120px; height: 30px; font-size: 1em; text-align: left; }
+</style>
+<script>
+//-------------------------写入操作日志---------------------------
+function infoLog(){
+    curUserInfo = JSON.parse(MainWindow.GetCurUserInfo());
+    var modeltitle=$('.dis').children('h4').text();
+    var title=strJson.strings.log_user+curUserInfo.user+strJson.strings.log_do+modeltitle+strJson.strings.log_module;
+    DEV_LOG={
+        time:times,
+        state:title,
+        // msg: str
+                
+    };
+    MainWindow.WriteSetLog(JSON.stringify(DEV_LOG))//写入日志数据库
+}
+      
+</script>
+
+</head>
+<body>
+    <div class="col-sm-12" id="DEV_APP" >
+        <h4 class="title-header"><i class="glyphicon glyphicon-check small"></i> <span data-locale="authorization">授权信息</span></h4>
+        <section class="branch-section col-sm-12">
+            <div class="form-group">
+                <ul class="list-group list-unstyled">
+                    <li class="list-group-item-heading" v-model="device_status"><span data-locale="deviceStatus">设备状态:</span> <span class="text-muted" >{{device_status}} </span></li>
+                    <li class="list-group-item-heading" v-model="authorize_type"><span data-locale="authorizeType">授权类型：</span> <span class="text-muted">{{authorize_type}}</span></li>
+                    <li class="list-group-item-heading" v-model="remain_time"><span data-locale="remainingTime">剩余时间：</span> <span class="text-muted">{{remain_time}}</span> </li>
+                    <li class="list-group-item-heading" v-model="total_time"><span data-locale="totalRunningTime">设备总运行时间：</span> <span class="text-muted">{{total_time}}</span> </li>
+                    <li class="list-group-item-heading" v-model="run_time"><span data-locale="runningTime">本次开机时间：</span> <span class="text-muted">{{run_time}}</span></li>
+                </ul>
+            </div>
+        </section>
+        <h4 class="title-header"><i class="glyphicon glyphicon-check small"></i> <span data-locale="xenonLampFlashSettings">氙灯闪光设置</span></h4>
+        <section class="branch-section col-sm-12">
+            <div class="form-group">
+                    <div class="form-group">
+                        <label class="form-inline"><span data-locale="flashingTimes">闪光次数</span> <input type="text" id="flash" v-model="flash" class="form-control" > <button type="button" v-on:click="flashReset" class="btn btn-danger" data-locale="reset">重置</button></label>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-inline"><span data-locale="alarmValue">报警数值</span> <input type="text" name="" v-model="warnval" class="form-control"></label>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-inline"><span data-locale="totalCounter">计数器</span>&nbsp;&nbsp; <input type="text" name="" v-model="counter" class="form-control"></label>
+                    </div>
+                    <div class="checkbox">
+                        <label class="checkbox-inline"><input type="checkbox" name="" v-model="alarm_close" > <span data-locale="disableCountAlarm">计数报警关闭</span></label>
+                    </div>
+                    <div class="checkbox">
+                        <label class="checkbox-inline"><input type="checkbox"  v-model="update"> <span data-locale="dataUpload">数据上传</span></label>
+                    </div>
+            </div>
+            
+            <div class="form-group col-sm-10  text-right">
+                <hr class="divider">
+                <button  class="btn btn-primary" v-on:click="dev_pushData" data-locale="save"> 应用设置 </button>
+           </div>
+        </section>
+    </div>  
+ 
+    <script>
+        loadProperties();//国际化
+        var DEV_TXTSAVE;
+        var info={device_status:'off',authorize_type:'永久',remain_time:"0",total_time:'100',run_time:'20分13秒',
+        flash:"20",warnval:"2000",counter:"190"};
+       
+        defaultSetStr = MainWindow.ConfigRead(8);//读取数据库
+        //alert("dev"+defaultSetStr);
+        if(defaultSetStr=="undefined"||defaultSetStr==""){
+           // alert("device数据库为空，写入默认值");  
+           
+            
+            DEV_TXTSAVE={
+                    device:{
+                        device_status:info.device_status,
+                        authorize_type:info.authorize_type,
+                        remain_time:info.remain_time,
+                        total_time:info.total_time,
+                        run_time:info.run_time,
+                        flash:info.flash,
+                        warnval:info.warnval,
+                        counter:info.counter,
+                        alarm_close:"true",
+                        update:"true"
+                }
+            };
+            MainWindow.ConfigWrite(8,JSON.stringify(DEV_TXTSAVE));
+            //alert(DEV_TXTSAVE.dev.dev_status+'_'+DEV_TXTSAVE.dev.flash+'_'+DEV_TXTSAVE.dev.warnval+'_'+DEV_TXTSAVE.dev.alarm_close+'_'+DEV_TXTSAVE.dev.update)
+    
+        } 
+        defaultSet = JSON.parse( MainWindow.ConfigRead(8));
+        //alert("dev_Read"+defaultSet.device.device_status); 
+     
+        var dev_vm= new Vue({  
+            
+            el: '#DEV_APP',  
+            data: {  
+                device_status:defaultSet.device.device_status,
+                authorize_type:defaultSet.device.authorize_type,
+                remain_time:defaultSet.device.remain_time,
+                total_time:defaultSet.device.total_time,
+                run_time:defaultSet.device.run_time,
+                flash:defaultSet.device.flash,
+                warnval:defaultSet.device.warnval,
+                counter:defaultSet.device.counter,
+                alarm_close:defaultSet.device.alarm_close,
+                update:defaultSet.device.update
+
+            },
+            methods: {
+            flashReset:function(event){
+                $("#flash").val('1');
+            },
+            dev_pushData: function (event) {
+                //获取当前闪光次数的值
+                flashval= $("#flash").val()
+                // alert(flashval); 
+                // `this` 在方法里指向当前 Vue 实例
+                DEV_TXTSAVE={
+                    device:{
+                        device_status:this.device_status,
+                        authorize_type:this.authorize_type,
+                        remain_time:this.remain_time,
+                        total_time:this.total_time,
+                        run_time:this.run_time,
+                        flash:flashval,
+                        warnval:this.warnval,
+                        counter:this.counter,
+                        alarm_close:this.alarm_close,
+                        update:this.update
+                    }
+                
+    
+                }
+
+              infoLog()//操作日志
+
+                MainWindow.ConfigWrite(8,JSON.stringify(DEV_TXTSAVE));//,发送参数为对象
+                MainWindow.ConfigRead(8,JSON.stringify(DEV_TXTSAVE))//更新显示
+                MainWindow.SetApplay()
+                layer.msg(strJson.public.sucess, {
+                    icon:1
+                });  
+                
+            }
+    
+            }
+        })
+    
+         
+    
+      </script>
+
+
+
+
+</body>
+</html>

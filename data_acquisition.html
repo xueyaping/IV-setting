@@ -1,0 +1,372 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>数据采集模块</title>
+  <!-- <link rel="stylesheet" href="./css/jquery-ui.css"> -->
+  <!-- <link rel="stylesheet" href="./css/bootstrap.min.css" > -->
+  <!-- <script src="./js/jquery-1.12.4.js"></script> -->
+  <!-- <script src="js/vue.min.js"></script> -->
+  <!-- <script src="./js/jquery-ui.js"></script>
+  <script src="./js/FileSaver.min.js"></script> -->
+ 
+<style>
+
+
+.branch-div {
+    margin-top: 40px;
+    margin-bottom: 40px;
+  }
+  .branch-section{
+    margin-bottom: 30px;
+  }
+  .branch-section:last-child{
+    padding-bottom: 60px;
+  }
+  .title-header {
+    display: block;
+    width: 88%;
+    border-bottom: solid 1px #f5f5f5;
+    padding-bottom:6px;
+    font-size: 16px;
+    line-height: 1.5em;
+    margin-top:20px;
+    margin-bottom: 20px
+  }
+  #ACQU_APP select{width: 80px}
+  span.error{display:none;color:firebrick;position: absolute;padding: 2px;text-align: center; background: #fefefe;
+    border: 1px solid #5e5e5e;margin-left: 5%;font-size: 0.8em;}
+  #showlist li {  padding: 1px;  width: 120px; height: 30px; font-size: 1em; text-align: left; }
+</style>
+
+
+</head>
+<body>
+    
+    
+<div class="col-sm-12" id="ACQU_APP"  >
+        <h4 class="title-header"><i class="glyphicon glyphicon-check small"></i> </h4>
+        <section  class="branch-section col-sm-12">
+          <form name="form1">
+            <div class="form-group">
+                <label class="form-inline" ><span data-locale="currentDegree">电流档位 (A)&nbsp;&nbsp; </span>
+                  <select name="current" id="current" class="form-control"  onchange="changeSelect(this.selectedIndex)">
+                                <!-- <option  v-bind:value="option.value"> 
+                                </option> -->
+                  </select>
+                </label>
+            </div>
+            <div class="form-group">
+                <label class="form-inline"><span data-locale="voltageDegree">电压档位 (V)&nbsp;&nbsp; </span>
+                  <select name="voltage" id="voltage" class="form-control">
+                  </select>
+                </label> 
+            </div>
+          </form> 
+                
+                
+        </section>
+        <h4 class="title-header"><i class="glyphicon glyphicon-check small"></i> </h4>
+        <section class="branch-section col-sm-12">
+                <div class="form-group">
+                        <label class="form-inline"><span data-locale="sweepDirection">扫描方向 &nbsp;&nbsp; </span>
+                        <select v-model="scan_direction" class="form-control" style="width: 100px">
+                                <option v-for="option in options3" v-bind:value="option.value">
+                                                {{ option.text }}
+                                </option>
+                                <!-- <option disabled value="请选择">请选择</option>
+                                <option>ISC &#8594 VOC</option>
+                                <option>VOC &#8594 ISC</option> -->
+                                
+                        </select>
+                        </label>                
+                </div>
+                <div class="form-group">
+                        <label  class="form-inline"><span data-locale="sweepTime">扫描时间 (ms)&nbsp;&nbsp; </span>
+                                <select v-model="scan_time" class="form-control">
+                                        <option v-for="option in options4" v-bind:value="option.value">
+                                                        {{ option.text }}
+                                        </option>
+                                        
+                                </select>
+                        </label>
+
+                </div>
+                <div class="form-group">
+                        <label class="form-inline"><span data-locale="irradianceSettings">辐照度 (w/m<sup>2</sup>)&nbsp;&nbsp; </span>
+                          <input v-model="irradiance" value="1" type="text" class="form-control" onblur="vatlidateInput($(this))"> 
+                          <span class="text-danger" style="display: none">请输入正确数值</span>
+                        </label>                     
+                        
+                </div>
+                             
+                <div class="form-group">
+                        <label class="form-inline"><span data-locale="testingTimes">测试次数&nbsp;&nbsp; </span>
+                        <input v-model="test_time" value="1" type="text" class="form-control" onblur="vatlidateInput($(this))"> 
+                        <span class="text-danger" style="display: none">请输入正确数值</span>
+                        </label>        
+                </div> 
+                <div class="form-group">
+                        <label class="form-inline"><span data-locale="testingInterval">测试间隔 (s)&nbsp;&nbsp; </span>
+                        <input v-model="test_interval" value="1" type="text" class="form-control" onblur="vatlidateInput($(this))"> 
+                        <span class="text-danger" style="display: none">请输入正确数值</span>
+                        </label>
+                </div>
+                       
+                <div class="form-group">
+                        <label  class="form-inline"><span data-locale="solarCellArea">单片电池面积 (cm<sup>2</sup>)&nbsp;&nbsp; </span>
+                        <input v-model="cell_area" value="1" type="text" class="form-control" onblur="vatlidateInput($(this))"> 
+                        <span class="text-danger" style="display: none">请输入正确数值</span>
+                        </label>
+                </div>  
+                <div class="form-group">
+                        <label class="form-inline"><span data-locale="componentArea">组件面积 (cm<sup>2</sup>)&nbsp;&nbsp; </span>
+                                <input v-model="module_area" value="1" type="text" class="form-control" onblur="vatlidateInput($(this))"> 
+                                <span class="text-danger" style="display: none">请输入正确数值</span>
+                        </label>
+
+                </div>  
+                <div class="form-group">
+                        <label class="form-inline"><span data-locale="setVdot">定点电压 (V)&nbsp;&nbsp; </span>
+                        <input v-model="fixed_voltage" value="1" type="text" class="form-control" onblur="vatlidateInput($(this))"> 
+                        <span class="text-danger" style="display: none">请输入正确数值</span>
+                        </label>
+                </div>  
+        <div class="col-sm-5"></div>
+        </section>
+        <div class="form-group col-sm-10  text-right">
+                <hr class="divider">
+                <button id="applyset" v-on:click="acqu_pushData" class="btn btn-primary" data-locale="save">应用设置</button>  
+
+        </div>                
+    </div>
+
+
+<script type="text/javascript">
+
+        //--------------------------电流电压select联动----------------------
+       
+                var arr_current = ["0.25","1","5","12.5","20"];
+                var arr_voltage = [
+                                ["1","10","50"],
+                                ["1","10","50"],
+                                ["1","10","50",'100'],
+                                ["50", '100'],
+                                ["50", '100'],
+                        ];
+                //网页加载完成，初始化菜单
+        
+        function init(){
+                //首先获取对象
+                     var current = document.form1.current;
+                     var voltage = document.form1.voltage;
+        
+                //指定current中<option>标记的个数
+                        current.length = arr_current.length;
+                      //  alert('current个数；'+current.length)
+                //循环将current数组中的数据写入<option>标记中
+                for(var i=0;i<arr_current.length;i++){
+                       /// alert(arr_current[i])
+                        current.options[i].text = arr_current[i];
+                        current.options[i].value = arr_current[i];
+                        
+                }
+        
+                //修改current列表的默认选择项
+                var index = 0;
+                current.selectedIndex = index;
+        
+                //指定voltage中<option>标记的个数
+                voltage.length = arr_voltage[index].length;
+        
+                //循环将voltage数组中的数据写入<option>标记中
+                for (var j = 0; j<arr_voltage[index].length;j++) {
+                        //alert(arr_voltage[index][j])
+                        voltage.options[j].text = arr_voltage[index][j];
+                        voltage.options[j].value = arr_voltage[index][j];
+                        
+                }
+                
+        }
+     
+                
+        function  changeSelect(index){
+                //选择对象
+                var voltage = document.form1.voltage;
+                //修改current列表的选择项
+                current.selectedIndex = index;
+        
+                //指定电压中<option>标记的个数
+                        voltage.length = arr_voltage[index].length;
+        
+                //循环将voltage数组中的数据写入<option>标记中
+                for (var j = 0; j<arr_voltage[index].length;j++) {
+                        voltage.options[j].text = arr_voltage[index][j];
+                        voltage.options[j].value = arr_voltage[index][j];
+                }
+        }
+        init();//传入函数地址
+
+     //   ------------------------------------------------------
+     loadProperties();//国际化
+        var ACQU_TXTSAVE;
+         defaultSetStr = MainWindow.ConfigRead(2);
+       // alert("acquisition_"+defaultSetStr);
+        if(defaultSetStr=="undefined"||defaultSetStr==""){//如果数据库字符串为空，写入默认值
+            alert("acqu数据库为空，写入默认值");  
+           
+            ACQU_TXTSAVE={
+                  acqu:{                  
+                        current_range: arr_current[0],
+                        voltage_range: arr_voltage[0][0],
+                        scan_direction: '0',
+                        scan_time: '10',
+                        irradiance:'1',
+                        test_time:'1',
+                        test_interval:'1',
+                        cell_area:'1',
+                        module_area:'1',
+                        fixed_voltage:'1',
+                        // acquinpt7:'1'
+                }
+           };
+           
+           MainWindow.ConfigWrite(2,JSON.stringify(ACQU_TXTSAVE));
+         // alert(ACQU_TXTSAVE.acqu.current_range);
+        };
+          defaultSet = JSON.parse(MainWindow.ConfigRead(2));
+          //alert("ACQU_Read"+defaultSet.acqu.current_range+defaultSet.acqu.voltage_range); 
+           var slt1val= defaultSet.acqu.current_range;  //历史电流值
+           var slt2val=defaultSet.acqu.voltage_range;   //历史电压值
+           var c_numbers= $("#current").find("option"); 
+          // var v_numbers=$("#voltage").find("option"); 
+
+           //遍历crrent的option中有与数据库中相等的值，设置此项选中状态
+           for (var i = 0; i < arr_current.length; i++) {
+               
+                if (c_numbers[i].value == slt1val) {
+                   $(c_numbers[i]).attr("selected", "selected");
+                   index=c_numbers[i].index;//current选中项的索引
+                }
+          }
+          
+         
+         // 匹配current下拉菜单的arr_voltage选项
+         
+          voltage.length = arr_voltage[index].length;
+          for (var j = 0; j<arr_voltage[index].length;j++) {
+                voltage.options[j].text = arr_voltage[index][j];
+                voltage.options[j].value = arr_voltage[index][j];
+                //遍历voltage的option，有与数据库中相等的值，设置此项选中状态
+                if (arr_voltage[index][j] == slt2val) {
+                        // alert(arr_voltage[index][j]);               
+                        $(arr_voltage[index][j]).attr("selected", "selected");
+                }
+                
+          }
+       
+          
+        var acqu_vm= new Vue({  
+            
+            el: '#ACQU_APP',  
+            data: {  
+                // current_range:slt1val,
+                // voltage_range:slt1val,
+                scan_direction:defaultSet.acqu.scan_direction,
+                options3: [
+                { text: 'Isc → Voc', value: '0' },
+                { text: 'Voc → Isc', value: '1' },
+                
+                ],
+                scan_time:defaultSet.acqu.scan_time,
+                options4: [
+                { text: '10', value: '10' },
+                { text: '20', value: '20' },
+                { text: '30', value: '30' },
+                { text: '40', value: '40' },
+                { text: '50', value: '50' },
+                { text: '60', value: '60' },
+                { text: '70', value: '70' },
+                { text: '80', value: '80' },
+                { text: '90', value: '90' },
+                { text: '90', value: '100' },
+                ],
+                irradiance:defaultSet.acqu.irradiance,
+                test_time:defaultSet.acqu.test_time,
+                test_interval:defaultSet.acqu.test_interval,
+                cell_area:defaultSet.acqu.cell_area,
+                module_area:defaultSet.acqu.module_area,
+                fixed_voltage:defaultSet.acqu.fixed_voltage,
+                // acquinpt7:defaultSet.acqu.acquinpt7
+                
+            },
+            
+            methods: {
+                    
+                acqu_pushData: function (event) {
+              // `this` 在方法里指向当前 Vue 实例
+                        
+                var slt1=$('#current option:selected').text();
+                var slt2=$('#voltage option:selected').text();
+                //alert('发送 ' + slt1+slt2 + this.scan_direction );
+
+                ACQU_TXTSAVE={
+                        acqu:{
+                                current_range:slt1,
+                                voltage_range:slt2,
+                                scan_direction:this.scan_direction,
+                                scan_time:this.scan_time,
+                                irradiance:this.irradiance,
+                                test_time:this.test_time,
+                                test_interval:this.test_interval,
+                                cell_area:this.cell_area,
+                                module_area:this.module_area,
+                                fixed_voltage:this.fixed_voltage,
+                                // acquinpt7:this.acquinpt7
+                        
+                        }
+
+                };
+                var inputTot=0;
+                var inputlen=$("#ACQU_APP input[type=text]").length;
+                $("#ACQU_APP input[type=text]").blur();
+                $("#ACQU_APP input[type=text]").each(function(){
+                        inputTot+= $(this).data('s');
+                })
+                if(inputTot==inputlen){
+                        //操作日志 
+                        curUserInfo = JSON.parse(MainWindow.GetCurUserInfo())
+                        var modeltitle=$('.dis').children('h4').text();
+                        var title=strJson.strings.log_user+curUserInfo.user+strJson.strings.log_do+modeltitle+strJson.strings.log_module;
+                        ACQU_LOG={
+                        time:times,
+                        state:title,
+                        // msg: str                        
+                        };
+              
+                        MainWindow.ConfigWrite(2,JSON.stringify(ACQU_TXTSAVE));//,发送参数为对象
+                        MainWindow.ConfigRead(2,JSON.stringify(ACQU_TXTSAVE))//更新显示
+                        MainWindow.WriteSetLog(JSON.stringify(ACQU_LOG))//写入日志数据库
+                        MainWindow.SetApplay();
+                        layer.msg(strJson.public.sucess, {
+                           icon:1
+                        });
+                       
+                }
+        
+            }
+
+
+
+            }
+            
+        }) 
+       
+       
+       
+     
+</script>
+
+
+        </body>
+</html>

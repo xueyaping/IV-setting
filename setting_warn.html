@@ -1,0 +1,331 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>报警模块</title>
+  <!-- <link rel="stylesheet" href="./css/jquery-ui.css"> -->
+  <!-- <link rel="stylesheet" href="./css/bootstrap.min.css" > -->
+  <!-- <script src="./js/jquery-1.12.4.js"></script> -->
+  <!-- <script src="js/vue.min.js"></script> -->
+  <!-- <script src="./js/jquery-ui.js"></script>
+  <script src="./js/FileSaver.min.js"></script> -->
+ 
+<style>
+/* .title-img{
+    padding:5 20px;
+    margin:0 10px 0 0;
+    border-left: 5px solid #f0ad4e;
+    box-sizing: border-box
+} */
+/* .branch-div {
+    margin-top: 40px;
+    margin-bottom: 40px;
+  } */
+  /* .branch-section{
+    margin-bottom: 20px;
+  } */
+  /* .branch-section:last-child{
+    padding-bottom: 30px;
+  } */
+  /* .title-header {
+    display: block;
+    width: 88%;
+    border-bottom: solid 1px #f5f5f5;
+    padding-bottom:6px;
+    font-size: 16px;
+    line-height: 1.5em;
+    margin-top:20px;
+
+  } */
+
+  span.error{display:none;color:firebrick;position: absolute;padding: 2px;text-align: center; background: #fefefe;
+    border: 1px solid #5e5e5e;margin-left: 5%;font-size: 0.8em;}
+</style>
+
+<script>
+     loadProperties();//国际化
+    function getWarmDatas(){//从数据库读取参数
+        paramsJson=JSON.parse(MainWindow.GetRaname());
+        keyArr=Object.keys(paramsJson);
+       // alert(keyArr);
+        for(var i=0;i<keyArr.length;i++){
+         var key=keyArr[i];
+         byname=paramsJson[key].byname
+          $("#warnselect").append("<option value='"+byname+"'>"+byname+"</option>");
+          //alert(paramsJson[key].byname)
+        }
+        /* for(k=0;k<parms.length;k++){ //动态添加选择列表的option
+            $("#warnselect").append("<option value='"+parms[k]+"'>"+parms[k]+"</option>");
+        } */
+       
+     }
+    function view(){
+        var dataArr={};
+        var txts={};
+        var yn;
+        var warnchbxArr=[];
+        var len=( $("#warnselect option").length);//参数选项
+        var selected=$("#warnselect").find("option:selected").text();//当前选中的参数
+        var maxval=$("input[name=warnmax]").val();  //最大值
+        var minval=$("input[name=warnmin]").val();//最小值
+        dataArr={parm:selected,max:maxval,min:minval};
+        
+        var view= $('#dataview p');
+        var datas=dataArr.parm+' '+'['+dataArr.min+'-'+dataArr.max+')';
+        
+        if(view.text()!==''){
+            view.each(function() {
+                
+                for(var k=0;k<view.length+1;k++){
+                    var indx =  $('#dataview p').index( this );
+                    var ptxt= $('#dataview p').eq(indx).text();
+                    str= ptxt.split(" ");//以空格分割字符串
+                    firstr=str[0]//取第一部分——参数名
+                    txts[++k]={parm:firstr};//将所以显示的参数名存入数组
+                    //  alert('----index:'+k)
+                   // alert(txts[k].parm+'----index:'+k);
+
+            //-------------------判断选择的参数是否已存在于数组中---------
+                    if(txts[k].parm==dataArr.parm){
+                        alert(dataArr.parm+'----已存在')
+
+                       // alert(view.index( this ))
+                        $('#dataview p').eq(indx).text(datas)
+                        yn=false 
+                        return false
+                    }else{
+                       // alert(dataArr.parm+'----不存在');
+                        yn= true;
+                    } 
+                }
+                    
+            })
+
+            if(yn==true){
+                $('#dataview ').append("<p>"+datas+"</p>"); 
+                //不存在，生成预览
+            }
+            
+            
+
+        }else{
+            $('#dataview').append("<p>"+datas+"</p>"); 
+        }
+    }
+    function readView(){//输出历史设置
+       
+        defaultSet = JSON.parse( MainWindow.ConfigRead(6))
+
+        var views=defaultSet.warn.dataview;
+        var keyarr=Object.keys(views);
+        var key;var datas;
+        $('#getValue').empty();
+        for(var i=0;i<keyarr.length;i++){
+            key=keyarr[i]; 
+           // datas=views[key].parm+' '+views[key].max+' '+views[key].min;
+            datas=views[key].parm;
+
+           // alert(MainWindow.ConfigRead(6));
+            $('#getValue').append('<p>'+datas+'</p>');
+            if($('#getValue').is(':hidden')){
+                $('#getValue').show()
+            }else{
+                $('#getValue').hide()
+            }  
+        }
+          
+    }
+
+    function allwarnbox(){
+        var h=0;
+        var inputs= $("input[name=allwarnbox]");
+        inputs.each(function(){
+            warnval=$(this).val();
+            warnchbxArr[i++]=warnval
+        })        
+    }
+//----------------操作日志---------------------
+function infoLog(){
+    curUserInfo = JSON.parse(MainWindow.GetCurUserInfo());
+    var modeltitle=$('.dis').children('h4').text();
+    var title=strJson.strings.log_user+curUserInfo.user+strJson.strings.log_do+modeltitle+strJson.strings.log_module;
+    WARN_LOG={
+        time:times,
+        state:title,
+        // msg: str
+                
+    };
+    MainWindow.WriteSetLog(JSON.stringify(WARN_LOG))//写入日志数据库
+}
+</script>         
+</head>
+<body>
+    <div class="col-sm-12" id="WARN_APP">
+          
+        <h4 class="title-header"><i class="glyphicon glyphicon-check small"></i> <span data-locale="alarmOption">报警功能</span></h4>
+        <section class="branch-section col-sm-12">
+            
+                    <div class="checkbox">
+                            <label><input type="checkbox" name="allwarnchbx" id="" v-model="alarm_analysis" value="alarm_analysis"> <span data-locale="alarmAnalysis">报警分析</span></label>
+                    </div>
+                    <div class="checkbox">
+                            <label><input type="checkbox" name="allwarnchbx" id="" v-model="hide_alarm" value="hide_alarm"> <span data-locale="disableDisplay">隐藏分档报警</span></label>
+                    </div>
+                    <div class="checkbox">
+                            <label><input type="checkbox" name="allwarnchbx" id="" v-model="no_ringing" value="no_ringing"> <span data-locale="disableRinging">报警不震铃</span></label>
+                    </div>
+                    <div class="checkbox">
+                            <label><input type="checkbox" name="allwarnchbx" id="" v-model="no_save" value="no_save"> <span data-locale="noSaveAlarm">报警不保存</span></label>
+                    </div>
+                    <div class="checkbox">
+                            <label><input type="checkbox" name="allwarnchbx" id="" v-model="no_flash" value="no_flash"> <span data-locale="TModAlarmNoFlash">TMod报警不闪光</span></label>
+                    </div>
+                   
+         
+        </section>
+        <h4 class="title-header"><i class="glyphicon glyphicon-check small"></i> <span data-locale="alarmParameter">报警参数设置</span></h4>
+        <section class="branch-section col-sm-12"> 
+            <div class="form-group">
+                <button id="cruvalue" class="btn btn-default" onclick="readView()" data-locale="currentSettings">当前设置</button>
+            </div>
+            <div class="form-group well-sm" id="getValue"  style="display: none"></div>
+            <div class="form-group form-inline" id="selectList">
+                <label class="control-label"> <span data-locale="parameter">参数</span> 
+                 <select id="warnselect" v-model="warnselect" class="form-control"></select>
+                </label>
+                <label class="control-label">min <input name="warnmin" type="" v-model="warnmin" class="form-control" style="max-width:100px" ></label>
+                <label class="control-label">max <input name="warnmax" type="" v-model="warnmax" class="form-control"  style="max-width:100px"></label> 
+                <button id="btnview" class="btn btn-info" v-on:click="value_view" data-locale="confirm">确定</button>
+
+               <!-- <ul>
+                    <li v-for="">{{warnselect}} max:{{warnmax}} min:{{warnmin}}</li>
+                </ul> -->
+            </div>
+
+            <div id="dataview" v-model="dataview"></div>
+        </section>  
+        <div class=" form-group col-sm-10  text-right">
+                <hr class="divider">
+                <button  class="btn btn-primary" v-on:click="warn_pushData" data-locale="save" > 应用设置 </button>
+        </div>
+    </div>
+    <script type="text/javascript">
+        getWarmDatas();
+        var WARN_TXTSAVE;
+        defaultSetStr = MainWindow.ConfigRead(6);//读取数据库
+        //alert("warn--"+defaultSetStr);
+        if(defaultSetStr=="undefined"||defaultSetStr==""){
+          // alert("warn数据库为空，写入默认值");  
+            var slctobj = $("#warnselect").find("option"); //获取select下拉框的所有值
+            defltobj=slctobj.eq(0).text()
+            
+            WARN_TXTSAVE={
+                    warn:{
+                        warnCheckbox:{
+                            alarm_analysis:true,
+                            hide_alarm:true,
+                            no_ringing:true,
+                            no_save:true,
+                            no_flash:false,
+                        },
+                        
+                        warnselect:defltobj,
+                        warnmax:'10',
+                        warnmin:'1',
+                        dataview:[{"parm":"Test_Date","max":1,"min":0}]
+                }
+            };
+         
+            MainWindow.ConfigWrite(6,JSON.stringify(WARN_TXTSAVE));
+           // alert("wrote_"+WARN_TXTSAVE.warn.warnselect);
+    
+        } 
+        
+        defaultSet = JSON.parse( MainWindow.ConfigRead(6));
+        var warn_vm= new Vue({  
+            el: '#WARN_APP',  
+            data: {  
+                alarm_analysis:defaultSet.warn.warnCheckbox.alarm_analysis,
+                hide_alarm:defaultSet.warn.warnCheckbox.hide_alarm,
+                no_ringing:defaultSet.warn.warnCheckbox.no_ringing,
+                no_save:defaultSet.warn.warnCheckbox.no_save,
+                no_flash:defaultSet.warn.warnCheckbox.no_flash,                warnselect:defaultSet.warn.warnselect,
+                warnmax:defaultSet.warn.warnmax,
+                warnmin:defaultSet.warn.warnmin,
+                
+            },
+            methods: {
+            warn_pushData: function (event) {
+                var parms={}; parmarr=[];var j=0;     
+                var view= $('#dataview p');
+                view.each(function(){
+                    views=$(this).text().split(",");
+                    //alert(views);
+                    parms={parm:views[0],max:views[1],min:views[2]};
+                    parmarr[j++]=parms;
+                   
+                })
+                //获取select下拉框的所有值
+                var warnslted = $("#warnselect").find("option:selected").text(); 
+              
+                // `this` 在方法里指向当前 Vue 实例
+                WARN_TXTSAVE={
+                    warn:{
+                        warnCheckbox:{
+                            alarm_analysis:this.alarm_analysis,
+                            hide_alarm:this.hide_alarm,
+                            no_ringing:this.no_ringing,
+                            no_save:this.no_save,
+                            no_flash:this.no_flash,
+                        },
+                        
+                        warnselect:warnslted,
+                        warnmax:this.warnmax,
+                        warnmin:this.warnmin,
+                        dataview:parmarr
+                    }    
+                },
+                infoLog();
+                $('#dataview').empty();
+                MainWindow.ConfigWrite(6,JSON.stringify(WARN_TXTSAVE));//,发送参数为对象
+                MainWindow.ConfigRead(6,JSON.stringify(WARN_TXTSAVE));//更新显示
+                readView();
+                MainWindow.SetApplay()
+                layer.msg(strJson.public.sucess, {
+                    skin: 'layui-layer-setmybg'
+                });
+
+            },
+                value_view:function(event){
+                    view()
+                }
+            }
+        })
+    
+    
+       // readView()//当前配置读取
+
+    
+      </script>
+      <script>
+
+
+            $.fn.toggle = function( fn, fn2 ) {
+            var args = arguments,guid = fn.guid || $.guid++,i=0,
+            toggle = function( event ) {
+                var lastToggle = ( $._data( this, "lastToggle" + fn.guid ) || 0 ) % i;
+                $._data( this, "lastToggle" + fn.guid, lastToggle + 1 );
+                event.preventDefault();
+                return args[ lastToggle ].apply( this, arguments ) || false;
+            };
+            toggle.guid = guid;
+            while ( i < args.length ) {
+                args[ i++ ].guid = guid;
+            }
+            return this.click( toggle );
+            };
+        </script>
+</body>
+</html>

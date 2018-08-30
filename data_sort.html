@@ -1,0 +1,420 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>保存显示——排序</title>
+  <link rel="stylesheet" href="./css/jquery-ui.css">
+<!--   <link rel="stylesheet" href="./css/bootstrap.min.css" > -->
+  <!-- <script src="./js/jquery-1.12.4.js"></script> -->
+  <script src="./js/jquery-1.12.4.js"></script>
+  <script src="./js/jquery.i18n.properties-1.0.9.js"></script>
+  <script src="./js/jquery-ui.js"></script>
+ 
+  <style>
+.branch-div {
+  margin-top: 40px;
+  margin-bottom: 40px;
+}
+.branch-section{
+  margin-bottom: 30px;
+}
+.branch-section:last-child{
+  padding-bottom: 60px;
+}
+.title-header {
+  display: block;
+  width: 88%;
+  border-bottom: solid 1px #f5f5f5;
+  padding-bottom:6px;
+  font-size: 16px;
+  line-height: 1.5em;
+  margin-top:20px;
+  margin-bottom: 10px
+}
+.sm-control{max-width:100px; display: inline-block;height: 30px;margin-top: 5px};
+span.text-danger{display: none}
+  #feedback { font-size: 14px; }
+  #selectable .ui-selecting { background: #FECA40;}
+  #selectable .ui-selected { background: #F39814; color: white; }
+  #selectable,#sortable-f,#sortable-v { list-style-type: none; margin: 0; padding: 0;cursor: default }
+  #selectable li { margin: 5px; padding: 10px; float: left; text-align: center; }
+  #selectDiv{overflow: hidden};
+  </style>
+  <script>
+    var i=0,h=0,resFile=[],resView=[];
+    function getDatas(){//从数据库读取参数
+      paramsJson=JSON.parse(MainWindow.GetRaname());
+      keyArr=Object.keys(paramsJson);
+     // alert(keyArr);
+      for(var i=0;i<keyArr.length;i++){
+       var key=keyArr[i];
+       byname=paramsJson[key].byname
+        $("#selectable").append('<li class="ui-state-default">'+byname+'</li>');
+        //alert(paramsJson[key].byname)
+      }
+    
+    }
+
+
+//-----------------应用设置时，写入操作日志--------------------------------
+function infoLog(){
+    //alert('log')
+    curUserInfo = JSON.parse(MainWindow.GetCurUserInfo());
+    //alert(curUserInfo.user)
+    var modeltitle=$('.dis').children('h4').text();
+    //alert(modeltitle)
+        var title=strJson.strings.log_user+curUserInfo.user+strJson.strings.log_do+modeltitle+strJson.strings.log_module;
+        SORT_LOG={
+            time:times,
+            state:title,
+            //msg: str     
+                    
+        };
+        MainWindow.WriteSetLog(JSON.stringify(SORT_LOG))//写入日志数据库
+
+}
+
+//-----------------------------应用排序，保存到数组-------------------------------
+function applyToFile(){
+  result=$("#select-result li");
+  if( result.length>0){
+    //alert( result.length);
+    resFile=[];
+    $("#select-result li").each(function() {
+      var resultIndex =result.index(this);
+      contentF=result.eq(resultIndex).text();
+      // alert(contentF)
+      resFile.push(contentF)
+    });
+ //alert("文件中排序："+resFile); 
+  }
+}     
+
+  function applyToView(){
+    result=$("#select-result li");
+    if( result.length>0){
+      //alert( result.length);
+      resView=[];
+      $("#select-result li").each(function() {
+        var resultIndex =result.index(this);
+        contentV=result.eq(resultIndex).text();
+        //alert(contentV)
+        resView.push(contentV)
+      });
+     // alert("显示排序："+resView); 
+    }
+  }  
+ // -----------------------------工作目录校验-----------------------------
+function vatlidatePath(){
+  val=$("#pathStr").val();
+  //alert("路径长度"+val.length);
+  if(val.length==0){
+    $("#pathStr").data({'s':0});//通过data赋值,不符合条件，s返回0
+    $("#pathStr").next().text(strJson.avt_sort.err1);
+    $("#pathStr").next().show();
+    $("#btnGetPath").focus()
+  }else{
+    defaultSet = JSON.parse(MainWindow.ConfigRead(4));
+    var datafile=defaultSet.save.applyto_file;
+    var dataview=defaultSet.save.applyto_view;
+    var path=defaultSet.save.file_path;
+   // alert(datafile);
+    if(datafile!=resFile||dataview!=resView){
+      if(path!=val){
+        $("#pathStr").next().hide();
+        $("#pathStr").data({'s':1})
+      }else{
+        // alert(path+"--"+val);
+        $("#pathStr").next().text(strJson.avt_sort.err2)
+        $("#pathStr").next().show();
+        $("#pathStr").data({'s':0})
+      }
+    
+    }else{
+      $("#pathStr").next().hide();
+      $("#pathStr").data({'s':1})
+    }
+
+   
+  }
+}
+
+function fileNameType(){//如果选择用户自定义命名方式，自定义输入框会被激活
+ var radios=$("input[name=paramfileName]");
+    if(radios.is(":checked").value=="用户自定义"){
+      $('#fileNameVal ').attr("disabled",false);  
+    }else{
+      $('#fileNameVal').attr("disabled",true);
+    }
+ 
+}
+function fileNameInput(){//自定义输入框输入校验
+  val=$("#fileNameVal").val(); 
+  if(val.length==0){
+    $("#fileNameVal").next().text(strJson.avt_sort.err3)
+    $("#fileNameVal").next().show();
+    $("#fileNameVal").focus()
+
+    //$(this).data({"s":1})
+  }else{
+      $("#fileNameVal").next().hide();
+      //$(this).data({"s":1})
+  }
+}
+
+function tipsLayer(){
+  $('#applyb')
+}
+//------------------------------------------////////////////////////////////////////////////////
+
+  $(function() {
+  
+    getDatas();
+    loadProperties();//国际化
+    fileNameType()//文件命名方式
+    $( "#selectable" ).selectable({
+      stop: function() {
+        var result = $( "#select-result" ).empty();
+        $( ".ui-selected", this ).each(function() {
+            var index = $( "#selectable li" ).index( this );
+          //result.append( " #" + ( index + 1 ) );
+            content= $( "#selectable li" ).eq(index).text();
+            result.append( "<li class='list-group-item'>"+content +"</li>");
+            // result.append( "<li>"+( index + 1 )+ ":"+content +"</li>");
+            $('#btnSaveFile').show();
+            $('#btnSaveView').show()
+            
+            //在选择结果排序
+            $( "#select-result" ).sortable();
+            $( "#select-result" ).disableSelection();
+        });
+      }
+    });
+    //--------------------------------------///////////////////////////////////////
+
+    $('#btnSaveFile').click(function(){
+      applyToFile();
+      
+    })
+    $('#btnSaveView').click(function(){
+      applyToView();
+    })
+ 
+    $( "#sortable-f,#sortable-v" ).sortable();
+    $( "#sortable-f,#sortable-v" ).disableSelection();
+
+ 
+
+  });
+ 
+  </script>
+</head>
+<body>
+
+  <div class="col-sm-12"  >
+      <h4 class="title-header"><i class="glyphicon glyphicon-check small"></i> <span data-locale="parameterList"> 参数列表</span></h4>
+      <section class="branch-section col-sm-12">
+
+        <!-- 从数据库读取参数  -->
+        <div id="selectDiv" class="branch-section col-sm-12" title="可单选，框选,按Ctrl点击加选">
+            <!-- <h4 class="page-header">保存数据</h4> -->
+            <ol id="selectable"></ol><br>
+        </div>
+        <div id="feedback" class="form-group col-sm-12">
+            <h4 class="title-header" ><span data-locale="parameterSort">参数排序 </span></h4>
+            <ul class="list-group list-unstyled col-sm-9" id="select-result" title="拖拽所选参数进行排序"><span class="text-muted" data-locale="noParameters">当前未选择任何参数</span></ul>
+        </div>  
+        <div  class="btn-group col-sm-12">
+            <button id="btnSaveFile" class="btn btn-default" style="display:none" v-model="applyto_file" data-locale="toFile">应用当前排序到文件</button>&nbsp;
+            <!-- <ul id="sortable-f" class="list-group" style="display: none" ></ul> -->
+            <button id="btnSaveView" class="btn btn-info" style="display:none" v-model="applyto_view"  data-locale="toDisplay"> 应用当前排序到显示 </button>
+            <!-- <ul id="sortable-v" class="list-group" style="display: none" ></ul> -->
+        </div>
+      </section>   
+      <div class="" id="SORT_APP">
+        <h4 class="title-header"><i class="glyphicon glyphicon-check small"></i> <span data-locale="saveSettings">保存设置</span></h4>
+        <section  class="branch-section col-sm-12">
+            <h4 class="title-header" data-locale="saveContent">保存内容</h4>
+            <div class="form-group">
+                    <label><input type="checkbox" name="" id="CSV" v-model="save_CSV" value="save_CSV" > <span data-locale="SaveCSVFile">保存CSV</span></label> 
+                    <label><input type="checkbox" name="" id="SRC" v-model="save_SRC" value="save_SRC"> <span data-locale="SaveOriginalData">保存原始数据</span></label>
+                    <label><input type="checkbox" name="" id="Mdb" v-model="save_MDB" value="save_MDB"> <span data-locale="saveMDBFile">保存MDB文件</span></label>
+                    <label><input type="checkbox" name="" id="correction" v-model="save_correction" value="save_correction"> <span data-locale="saveCorrection">保存校准数据</span></label>
+                    <label><input type="checkbox" name="" id="filter" v-model="save_filter" value="save_filter"> <span data-locale="saveInClass">分档保存</span></label>
+                    <label><input type="checkbox" name="" id="picture" v-model="save_picture" value="save_picture"> <span data-locale="saveImg">保存图片</span></label>
+            </div>
+          
+            <div class=" form-group">
+                <h4 class="title-header" data-locale="DAQBMPName">保存文件名</h4>
+              <label class=""><input type="radio" name="fileName" v-model="bmpfile_name" value="0"> <span data-locale="serialNO">以序列号命名</span> </label>&nbsp;&nbsp;
+              <label  class=""><input type="radio" name="fileName" v-model="bmpfile_name" value="1"> <span data-locale="dateTime">以时间命名</span> </label>
+            </div> 
+            <div class=" form-group" >
+                <h4 class="title-header" data-locale="IVParameterFileName">I-V 参数文件命名</h4>
+                <div class="radio-inline">
+                  <label for="fileNameByTime"><input id="fileNameByTime" type="radio" name="paramfileName" value="0"  v-model="fileName_type" v-on:click="fileNameByTime"> <span data-locale="updateByDate">按日期自动更新</span></label>
+                </div>
+                <div class="radio-inline">
+                  <label for="fileNameByCustom"><input id="fileNameByCustom" type="radio"  name="paramfileName" value="1" v-model="fileName_type" v-on:click="fileNameByCustom"> <span data-locale="custom">用户自定义</span></label>
+                </div>
+                <div class="radio-inline">
+                  <input id="fileNameVal" type="text" class="form-control" v-model="filename_bycustom" placeholder="请输入文件名"  v-on:blur="fileNameInput" ><span class="text-danger">请输入文件名！</span>
+                </div>
+            </div>   
+            <div class=" form-group">
+                <h4 class="title-header" data-locale="testReportTitle">测试报告标题</h4>
+              <p><input id="" type="text" name="viewTitle" class="form-control" value="Gsolar Test report"  v-model="file_title"></p>
+            </div>
+            <div class="form-group">
+                <h4 class="title-header"  data-locale="filePath">工作目录选择 </h4>
+              <div class=" form-horizontal">
+                  <button v-on:click="sort_getPath" id="btnGetPath" type="button"  class="btn btn-default col-sm-2" data-locale="browse">浏览..</button>
+                  <div class="col-sm-10">
+                      <input name="pathStr" id="pathStr" type="text" class="form-control " v-on:blur="path_vatlidate" v-model="file_path" >
+                      <span class="text-danger"></span>
+                    </div>
+              </div> 
+            </div>        
+        </section>
+        <div class="form-group col-sm-10  text-right">
+          <hr class="divider">
+        <button  v-on:click="sort_pushData" id="applyData" class="btn btn-primary" data-locale="save">应用设置</button>  
+      </div>
+  </div>
+</div>
+    
+
+<script>
+  var SORT_TXTSAVE;
+ defaultSetStr = MainWindow.ConfigRead(4);//读取数据库
+ //alert("sort_"+defaultSetStr);
+
+  if(defaultSetStr=="undefined"||defaultSetStr==""){//如果数据库字符串为空，写入默认值
+    //alert("sort数据库为空，写入默认值");  
+    SORT_TXTSAVE={
+      
+          save:{     
+            applyto_file: '',
+            applyto_view: '',  
+            saveCheckbox:{
+              save_CSV:false,
+              save_SRC:true,
+              save_MDB:true,
+              save_correction:false,
+              save_filter:false,
+              save_picture:false,
+            },
+            bmpfile_name:'0',
+            fileName_type:'0',
+            filename_bycustom:'',
+            file_title:'Gsolar Test report',
+            file_path: 'filePath',
+        }
+   };
+   MainWindow.ConfigWrite(4,JSON.stringify(SORT_TXTSAVE));
+  // alert("wrote_"+SORT_TXTSAVE.save.save_type+SORT_TXTSAVE.save.bmpfile_name+SORT_TXTSAVE.save.file_path);
+};
+
+ defaultSet = JSON.parse(MainWindow.ConfigRead(4));
+ //alert("read_"+defaultSet.save.save_type);
+
+var sort_vm= new Vue({  
+    el: '#SORT_APP',  
+    
+    data: {  
+       
+      save_CSV:defaultSet.save.saveCheckbox.save_CSV,
+      save_SRC:defaultSet.save.saveCheckbox.save_SRC,
+      save_MDB:defaultSet.save.saveCheckbox.save_MDB,
+      save_correction:defaultSet.save.saveCheckbox.save_correction,
+      save_filter:defaultSet.save.saveCheckbox.save_filter,
+      save_picture:defaultSet.save.saveCheckbox.save_picture,
+      bmpfile_name:defaultSet.save.bmpfile_name,
+      fileName_type:defaultSet.save.fileName_type,
+      filename_bycustom:defaultSet.save.filename_bycustom,
+      file_title:defaultSet.save.file_title,
+      file_path:defaultSet.save.file_path
+    },
+    
+    methods: {
+      fileNameInput:function(){//自定义命名验证
+        fileNameInput()
+      },
+     fileNameByCustom:function(){//点击自定义命名时，输入框解禁
+        $("#fileNameVal").attr("disabled",false);
+      }, 
+      fileNameByTime:function(){//点击自定义命名时，输入框解禁      
+        $("#fileNameVal").attr("disabled",true);
+        $("#fileNameVal").next().hide();
+      }, 
+      sort_getPath:function(){
+        getPath= MainWindow.GetWorkPath();//获得工作路径
+        $("#pathStr").val(getPath);//显示路径
+        vatlidatePath();
+        //$("#pathStr").focus()
+      },
+      path_vatlidate:function(){//工作路径校验
+        vatlidatePath()
+      }, 
+      sort_pushData: function (event) {    
+          
+        var radiochk= $('#fileNameByCustom').is(":checked");
+        if(radiochk==true){
+          fileNameInput();
+        }else{
+          $("#fileNameVal").val("");
+        }
+        vatlidatePath();
+        SORT_TXTSAVE={
+          save:{
+            applyto_file: resFile,
+            applyto_view: resView,
+            saveCheckbox:{
+              save_CSV:this.save_CSV,
+              save_SRC:this.save_SRC,
+              save_MDB:this.save_MDB,
+              save_correction:this.save_correction,
+              save_filter:this.save_filter,
+              save_picture:this.save_picture,
+            },
+            
+            bmpfile_name:this.bmpfile_name,
+            fileName_type:this.fileName_type,
+            filename_bycustom:this.filename_bycustom,
+            file_title:this.file_title,
+            file_path:getPath
+          
+          }
+
+        };
+      var len=$("input[name=pathStr]").data("s");
+      if(len==1){
+        //alert(len)
+        MainWindow.ConfigWrite(4,JSON.stringify(SORT_TXTSAVE));//,发送参数为对象
+        MainWindow.ConfigRead(4);//显示更新
+        infoLog();
+        MainWindow.SetApplay();
+        //alert(strJson.public.sucess);
+        layer.msg(strJson.public.sucess, {
+          icon:1
+       });
+      }
+    // MainWindow.ConfigRead(4,JSON.stringify(SORT_TXTSAVE));
+    
+      // `event` 是原生 DOM 事件
+      if (event) {
+       // alert(event.target.tagName)
+      }
+    }
+
+
+
+    }
+}) 
+
+
+</script>
+</body>
+</html>

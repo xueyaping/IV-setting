@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    
+    <link rel="stylesheet" href="./css/bootstrap.min.css" >
+   <!--  <link rel="stylesheet" href="./css/jquery-ui.css"> -->
+    <script src="./js/jquery-1.12.4.js"></script>
+  <!--   <script src="./js/jquery-ui.js"></script>
+    <script src="./js/FileSaver.min.js"></script> -->
+   
+    <title>用户登录</title>
+    <style>
+    body {
+      width: 100vw;
+      overflow: hidden;
+      font-family: 'Micros Yahei','微软雅黑'
+    }
+    .form-signin{
+      max-width:330px;
+      padding: 15px;
+      margin: 0 auto;
+      
+    }
+    .form-control{
+     
+      height: 40px;
+      padding: 15px;
+      font-size: 16px
+      
+    }
+
+</style>
+</head>
+<script>
+  var userInfo={}
+  function login(){
+   user= $("input[name=username]");
+   psd=$("input[name=password]");
+   userInfo={user:user.val(),password:psd.val()}
+  }
+  $(function(){
+    $(document).keyup(function(event){
+      if(event.keyCode ==13){
+        $("#btnLogin").click()
+      }
+    });
+    $("#btnLogin").click(function(){
+      login();
+	  //alert(JSON.stringify(userInfo));
+	  MainWindow.LoginOK(JSON.stringify(userInfo));
+    })
+  })
+</script>
+<body>
+  <div class="container">
+           
+           <div class="container-fluid">
+            
+                <div class="page-header"><img  src="./images/logo-blue.png" height="34px"/></div>
+           </div>
+                         
+          <form class="form-signin" action="warning-new.html" method="post">
+              <h3 class=" text-center">Please sign in</h3> 
+              <div class="form-group">
+                <label for="inputPassword" class="sr-only  control-label">Username</label>
+                <input class="form-control" type="text" name="username" placeholder="Username" >
+              </div>
+              <div class="form-group">
+                <label for="inputPassword" class="sr-only control-label">Password</label>
+                <input class="form-control" type="password" name="password" id="" placeholder="Password">   
+              </div>
+              <button id="btnLogin" type="button" class="btn btn-lg btn-primary btn-block">Sign in</button>
+
+            <!--  <div class="form-group">
+                  <div class="col-sm-offset-2 col-sm-6">
+                      <div class="checkbox">
+                      </div>
+                      
+                  </div>
+              </div>
+              
+               <div class="form-group">
+                <label for="">班次:</label>
+                <input type="radio" name="" id="">早
+                <input type="radio" name="" id="">中
+                <input type="radio" name="" id="">晚
+              </div> -->
+              <!-- <span>忘记密码？</span> -->
+          </form>
+
+      </div>
+    
+ 
+</body>
+</html>

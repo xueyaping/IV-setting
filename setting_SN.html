@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>校准模块</title>
+  <!-- <link rel="stylesheet" href="./css/jquery-ui.css"> -->
+  <!-- <link rel="stylesheet" href="./css/bootstrap.min.css" > -->
+  <!-- <script src="./js/jquery-1.12.4.js"></script> -->
+  <!-- <script src="js/vue.min.js"></script> -->
+  <!-- <script src="./js/jquery-ui.js"></script>
+  <script src="./js/FileSaver.min.js"></script> -->
+ 
+<style>
+.branch-div {
+    margin-top: 40px;
+    margin-bottom: 40px;
+  }
+  .branch-section{
+    margin-bottom: 60px;
+  }
+  .branch-section:last-child{
+    padding-bottom: 60px;
+  }
+  .title-header {
+    display: block;
+    width: 88%;
+    border-bottom: solid 1px #f5f5f5;
+    padding-bottom:6px;
+    font-size: 16px;
+    line-height: 1.5em;
+    margin-top:20px;
+
+  }
+
+  span.error{display:none;color:firebrick;position: absolute;padding: 2px;text-align: center; background: #fefefe;
+    border: 1px solid #5e5e5e;margin-left: 5%;font-size: 0.8em}
+ .sm-control{max-width:100px; display: inline-block;height: 30px;margin-top: 5px};
+  #showlist li {  padding: 1px;  width: 120px; height: 30px; font-size: 1em; text-align: left; }
+</style>
+
+<script>
+   loadProperties();//国际化
+    function infoLog(){
+    curUserInfo = JSON.parse(MainWindow.GetCurUserInfo());
+    var modeltitle=$('.dis').children('h4').text();
+    var title=strJson.strings.log_user+curUserInfo.user+strJson.strings.log_do+modeltitle+strJson.strings.log_module;
+    SN_LOG={
+        time:times,
+        state:title,
+        // msg: str
+                
+    };
+   
+    MainWindow.WriteSetLog(JSON.stringify(SN_LOG))//写入日志数据库
+}
+</script>
+</head>
+<body>
+  <div class="col-sm-12" id="SN_APP">
+      <h4 class="title-header"><i class="glyphicon glyphicon-check small"></i> </h4>
+      <section class="branch-section col-sm-12">
+              <div class="checkbox">
+                  <label><input type="checkbox" name="" id="" v-model="sn" value="sn"> <span  data-locale="SN"> 序列号</span></label>
+              </div>
+              <div class="checkbox">
+                  <label><input type="checkbox" name="" id=""  v-model="auto_sn" value="auto_sn"> <span data-locale="automaticSN"> 允许自动序号</span></label>
+              </div> 
+              <div class="checkbox">
+                  <label><input type="checkbox" name="" id=""  v-model="allow_input" value="allow_input"> <span data-locale="enableInputBox"> 允许输入框</span></label>
+              </div> 
+              <div class="checkbox">
+                  <label><input type="checkbox" name="" id=""  v-model="no_cleaning" value="no_cleaning"> <span data-locale="noClearInputBox"> 不清除输入框</span></label>
+              </div> 
+              <div class="checkbox">
+                  <label><input type="checkbox" name="" id=""  v-model="input_after_test" value="input_after_test" > <span data-locale="inputAfterTest"> 先测后输入</span></label>
+              </div> 
+              <div class="checkbox">
+                  <label><input type="checkbox" name="" id=""  v-model="no_repeat" value="no_repeat" > <span data-locale="snUnique">序号不重复</span></label>
+              </div> 
+              <div class="form-group">
+                  <label class="form-inline"><span data-locale="length">长度</span> <input type="number"  id="SNlen"  v-model="sn_length" value="1" class="form-control"></label>
+              </div> 
+              <div class="form-group">
+                  <label class="form-inline"><span data-locale="baseLength">基数</span> <input type="number"  id="SNVal"  v-model="auto_base" value="1" class="form-control"></label>
+              </div>         
+              
+
+      </section>
+      <div class=" form-group col-sm-10  text-right">
+        <hr class="divider">
+        <button  class="btn btn-primary" v-on:click="sn_pushData" data-locale="save"> 应用设置 </button>
+      </div>
+  </div>  
+ 
+  <script>
+  
+    var SN_TXTSAVE;
+    defaultSetStr = MainWindow.ConfigRead(3);//读取数据库
+    // alert("sn"+defaultSetStr);
+    if(defaultSetStr=="undefined"||defaultSetStr==""){
+      //  alert("SN数据库为空，写入默认值");  
+        SN_TXTSAVE={
+                sn:{
+                    snCheckbox:{
+                        sn:true,
+                        auto_sn:false,
+                        allow_input:true,
+                        no_cleaning:true,
+                        input_after_test:false,
+                        no_repeat:true
+                    },
+                  sn_length:'1',
+                  auto_base:'1'
+            }
+        };
+     
+        MainWindow.ConfigWrite(3,JSON.stringify(SN_TXTSAVE));
+       // alert("wrote_"+SN_TXTSAVE.sn.sninpt1);
+
+    } 
+    defaultSet = JSON.parse( MainWindow.ConfigRead(3));
+   // alert("sn_Read"+defaultSet.sn.snchbx); 
+
+    var sn_vm= new Vue({  
+        
+        el: '#SN_APP',  
+        data: {  
+            sn:defaultSet.sn.snCheckbox.sn,
+            auto_sn:defaultSet.sn.snCheckbox.auto_sn,
+            allow_input:defaultSet.sn.snCheckbox.allow_input,
+            no_cleaning:defaultSet.sn.snCheckbox.no_cleaning,
+            input_after_test:defaultSet.sn.snCheckbox.input_after_test,
+            no_repeat:defaultSet.sn.snCheckbox.no_repeat,
+            sn_length:defaultSet.sn.sn_length,
+            auto_base:defaultSet.sn.auto_base
+        },
+        methods: {
+       
+        sn_pushData: function (event) {
+            // `this` 在方法里指向当前 Vue 实例
+            //alert('out_OK')
+            SN_TXTSAVE={
+                sn:{
+                    snCheckbox:{
+                    sn:this.sn,
+                    auto_sn:this.auto_sn,
+                    allow_input:this.allow_input,
+                    no_cleaning:this.no_cleaning,
+                    input_after_test:this.input_after_test,
+                    no_repeat:this.no_repeat,
+                    },
+                    sn_length:this.sn_length,
+                    auto_base:this.auto_base
+                }
+            
+
+            }
+            infoLog();
+            MainWindow.ConfigWrite(3,JSON.stringify(SN_TXTSAVE));//,发送参数为对象
+            MainWindow.ConfigRead(3,JSON.stringify(SN_TXTSAVE))//更新显示 
+            MainWindow.SetApplay(); 
+            layer.msg(strJson.public.sucess, {
+                icon:1
+            });
+
+        }
+
+        }
+    })
+
+
+
+
+  </script>
+
+</body>
+</html>

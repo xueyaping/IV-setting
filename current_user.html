@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <!-- <link rel="stylesheet" href="./css/bootstrap.min.css"> -->
+   <!--  <link rel="stylesheet" href="./css/jquery-ui.css"> -->
+  <!--   <script src="js/bootstrap.min.js"></script> -->
+  <!--   <script src="./js/jquery-ui.js"></script>
+    <script src="./js/FileSaver.min.js"></script> -->
+
+    <title>current user</title>
+
+    <style>
+   /* .branch-div {
+      margin-top: 40px;
+      margin-bottom: 40px;
+    } */
+    .branch-section{
+      margin-bottom: 60px;
+    }
+    .branch-section:last-child{
+      padding-bottom: 60px;
+    }
+   
+   
+    </style>
+</head>
+<script>
+
+  var curUserInfo = JSON.parse(MainWindow.GetCurUserInfo());
+  function getCurUserInfo(){
+  //$("#currUser").empty();
+  /* user="<p id='currUsername'>"+"用户："+curUserInfo.user+"</p>";
+  time="<p id='currUserLogin'>"+"登录时间："+curUserInfo.logintimer+"</p>";
+   level="<p id='currUserFunc'>"+"权限级别："+curUserInfo.level+"</p>";
+  role1="超级用户";role2="普通用户";
+  var role;
+  //alert(curUserInfo.level)
+  if(curUserInfo.level=='1'){ 
+    $("#btnCurrEdit").hide();
+    if(curUserInfo.user=='Gsolar'){
+      role="<p>"+"角色：超级用户"+"</p>";
+    }
+
+  }else{
+    $("#btnCurrEdit").show();
+    role="<p>"+"角色：普通用户"+"</p>";
+  }
+  $("#currUser").append(user+role+time) */
+  user= curUserInfo.user;
+  time= curUserInfo.logintimer;
+  level= curUserInfo.level;
+  if(level=='1'){ 
+    $("#btnCurrEdit").hide();
+    if(curUserInfo.user=='Gsolar'){
+      role="Administrator";
+    }
+
+  }else{
+    $("#btnCurrEdit").show();
+    role="user";
+  }
+  $("#currUsername").html(user);
+  $("#role").html(role);
+  $("#currUserLogin").html(time);
+}
+ 
+//-------------------------获取编辑后的用户信息，提交发送-------------------------
+function userPwdModify(){//
+ // $('input[name=userModify]').blur();
+  var curFun=curUserInfo.func;
+  var curuser=curUserInfo.user; 
+  var newPwd=$("input[name=pwdModify]");
+  var newPwdVal=newPwd.val();
+  var len=newPwd.length;
+  if( newPwd.data('s')==len){
+    var userInfo={user:curuser,password:newPwdVal,level:'0',func:curFun}
+    sendObj= MainWindow.ModifyUser(JSON.stringify(userInfo));//,发送参数为对象
+    if(sendObj==1){   
+      layer.msg(strJson.public.sucess, {
+        icon:1
+     });
+      newPwd.val("");
+      //---------------写入操作日志--------------------
+      var modeltitle=$('.dis').children('h4').text();
+        var title=strJson.strings.log_user+curUserInfo.user+strJson.strings.log_psdChanged;
+        
+        USER_LOG={
+            time:times,
+            state:title,
+            // msg: str
+        };
+        MainWindow.WriteSetLog(JSON.stringify(USER_LOG))//写入日志数据库
+     
+    }else{
+      alert(strJson.public.failed);
+        layer.msg(strJson.public.failed, {
+          icon:2
+        });
+      return false;
+    }
+  }
+}
+function qrCode(){   //生成二维码         
+      // 设置参数方式
+      var qrcode = new QRCode(document.getElementById("qrCode"),  {
+        // render: "canvas||table",
+       // text: URL,
+        width: 180,
+        height: 180,
+        // colorDark : '#000000',
+        // colorLight : '#ffffff',
+        // correctLevel : QRCode.CorrectLevel.H
+      });
+      function makeCode () {
+        var devID=['9A','10A','20A+'];
+        var URL='http://www.gsola.cn/API/CSM/';
+        qrcode.makeCode(URL+devID[0]);
+      }
+      makeCode();
+      var margin = ($("#qrCode").height() - $("#qrimg").height()) / 2; //控制Logo图标的位置
+      $("#qrimg").css("margin", margin);
+}
+
+$(function(){
+  getCurUserInfo(); //获取当前用户信息
+  qrCode();//二维码
+  $('input[name=pwdModify]').blur(function(){
+    val=this.value;
+    var reg=/^[a-zA-Z0-9_-]{4,16}$/.test(val);
+    if(val.length>0){
+      if(reg==true){
+        $(this).data({'s':1});//符合条件，s返回1
+        $(this).next().hide();
+      }else{
+        $(this).data({'s':0});//通过data赋值,不符合条件，s返回0
+        $(this).next().text(strJson.public.input_err);
+        $(this).next().show();
+      }
+    }else{
+      $(this).data({'s':0});//符合条件，s返回1
+      alert($(this).next().text(strJson.public.new_password));
+      $(this).next().show();
+    }
+
+  })
+ 
+  $('#btnCurrSave').click(function(){
+    $('input[name=pwdModify]').blur();
+    userPwdModify();
+    $("#editModal").modal('hide')
+    // getCurUserInfo();//更新当前用户
+  })
+  $('#btnBack').click(function(){//取消按钮
+    $('#userList').show();
+    $('#userListDiv').show();
+    $('#creatUserDiv').hide();
+    $('input[type="checkbox"]').removeAttr('checked');
+  })
+  loadProperties();//国际化
+ 
+})
+</script>
+<body>
+
+    <div class="col-sm-12" >
+          <!-- 当前登录用户信息********************************************************* -->
+            <div id="currUserInfoDiv">
+          
+                <div id="currUser" class="form-horizontal">
+                  <p><label data-locale="currUsername" >用户：</label><span id="currUsername"></span></p>
+                  <p><label data-locale="role">权限：</label><span id="role"></span></p>
+                  <p><label data-locale="currUserLogin" >登录时间：</label><span id="currUserLogin"></span></p>
+                </div>
+                <!--编辑按钮  Button trigger modal -->
+                <button id="btnCurrEdit" type="button" class="btn btn-primary"  data-toggle="modal" data-target="#editModal" data-locale="changePassword">修改密码</button>
+            </div>
+
+            <!--编辑对话框modal  当前用户资料修改 --> 
+            <div id="editModal" class="modal fade bs-example-modal" tabindex="-1" role="dialog" aria-labelledby="editModalLabel">
+              <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                  <div class="modal-header">
+                      <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                      <h4 class="modal-title" data-locale="changePassword">请输入新密码</h4>
+                  </div>   
+                  <div class="modal-body">
+                      <div id="editCurrUser" class="form-horizontal" >
+                        <div class="form-group">
+                            <label class="col-sm-2 control-label sr-only">密码：</label>
+                            <div class="col-sm-6">
+                              <input id="pwdModify" name="pwdModify" class="form-control" type="password" placeholder="请输入新密码" title="可包含字母/数字/下划线/减号">
+                              <span class="text-danger"></span>
+                            </div>
+                        </div>
+                        
+                      </div>
+                  </div>                    
+                  <div class="modal-footer">
+                      <button id="btnCurrSave" type="button" class="btn btn-primary"><span aria-hidden="true" data-locale="confirm">确定修改</span></button>
+                      <button id="btnEditCancel" type="button" class="btn btn-default"  data-dismiss="modal" data-locale="cancel">取消</button>
+                  </div>                
+              </div>
+            </div>
+          </div>
+
+
+          <div id="qrCode">
+              <img id="qrimg"  src="./images/logo-code.png"
+              style="position: absolute;width: 40px; height: 40px;"  >
+              
+          </div>
+        </div>
+   
+   
+</body>
+</html>

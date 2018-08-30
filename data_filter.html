@@ -1,0 +1,589 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <!-- <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge"> -->
+    
+  <title>分档模块</title>
+  <!-- <link rel="stylesheet" href="./css/jquery-ui.css"> -->
+  <!-- <link rel="stylesheet" href="./css/bootstrap.min.css" > -->
+  <script src="./js/jquery-1.12.4.js"></script>
+  <script src="./js/jquery.i18n.properties-1.0.9.js"></script>
+  <script src="./js/jquery-ui.js"></script>
+  <!-- <script src="./js/FileSaver.min.js"></script> -->
+  <style>
+    .branch-div {
+      margin-top: 40px;
+      margin-bottom: 40px;
+    }
+    .branch-section{
+      margin-bottom: 30px;
+    }
+    .branch-section:last-child{
+      padding-bottom: 60px;
+    }
+   
+ #params1, #params2, #params3, #params4,#datas1,#datas2,#datas3,#datas4,#filter_btnNext{display: none}
+  .ui-widget.ui-widget-content {border: none}
+  span.error{display:none;color:firebrick;position: absolute;padding: 2px;text-align: center; background: #fefefe;
+    border: 1px solid #5e5e5e;margin-left: 5%;font-size: 0.8em;}
+ span.text-danger{display: none}
+ .form-control{max-width:80%}
+  #parmList li {  padding: 1px;  width: 120px; height: 30px; font-size: 1em; text-align: left; }
+  </style>
+<script>
+
+// var i,k,h;
+var aLink;
+var datasend={};
+var datasNew=[];
+var FILT_TXTSAVE;
+var arrval=[];
+
+// -----------------二维数组排序组合-----------
+function doExchange(doubleArrays){
+var len=doubleArrays.length;
+if(len>=2){
+    var len1=doubleArrays[0].length;
+    var len2=doubleArrays[1].length;
+    var newlen=len1*len2;
+    var temp=new Array(newlen);
+    var index=0;
+    for(var i=0;i<len1;i++){
+        for(var j=0;j<len2;j++){
+            temp[index]=doubleArrays[0][i]+
+                doubleArrays[1][j];
+            index++;
+        }
+    }
+    var newArray=new Array(len-1);
+    for(var i=2;i<len;i++){
+        newArray[i-1]= doubleArrays[i];
+    }
+    newArray[0]=temp;
+    return doExchange(newArray);
+}
+else{
+    return doubleArrays[0];
+}
+}// ------------------/
+
+
+
+
+function currFilter(){
+    
+
+    var mObjectStr = MainWindow.GetGradeInfo();
+    if(mObjectStr=="undefined"||mObjectStr==""){
+       alert('当前模块未设置')
+    }else{
+        $('#getData').empty();
+        var mObject = JSON.parse(MainWindow.GetGradeInfo());
+        keyarr=Object.keys(mObject);
+        for (var i = 0; i <keyarr.length; i++) {  
+            key=Object.keys(mObject)[i];
+            grade=mObject[key].grade;
+            param=mObject[key].param;
+            datas=mObject[key].datas;
+            name=mObject[key].name;
+            $('#getData').append('<p>'+'  '+'  '+mObject[key].param+'  '+mObject[key].datas+'  '+mObject[key].name+ '</p>');
+        }
+        $('#getData p:eq(0)').before('<p>' +'Grade：'+mObject[key].grade+'</p>')
+
+    }
+        // alert(JSON.stringify(mObject));
+}//当前应用配置
+
+// function imports(){
+//     //var filePath= $("#files").val('C:\fakepath\rules.txt"')
+//     var selectedFile = document.getElementById("files").files[0];//获取读取的File对象
+//     var name = selectedFile.name;//读取选中文件的文件名
+//     var size = selectedFile.size;//读取选中文件的大小
+//     var type= 'json';
+//     console.log("文件名:"+name+"大小："+size+"类型："+type);
+
+//     var reader = new FileReader();//这里是核心！！！读取操作。
+//     reader.readAsText(selectedFile);//作为文本读取文件的内容
+
+//     reader.onload = function(f){
+//         data= $.parseJSON(this.result);//文本内容转换为json
+//         keyarr=Object.keys(data);
+//         for (var i = 0; i <keyarr.length; i++) {  
+//         key=Object.keys(data)[i];
+//         grade=data[key].grade;
+//         param=data[key].param;
+//         datas=data[key].datas;
+//         name=data[key].name;
+//         $('#getData').append('<p>' +'分级：'+data[key].grade+'  '+'参数：'+'  '+data[key].param+'  '+data[key].datas+'  '+'档位名：'+data[key].name+ '</p>');
+
+//         console.log(this.result);//当读取完成之后会回调这个函数，然后此时文件的内容存储到了result中。直接操作即可。
+//         };
+
+//     }
+
+// }
+
+//-------------档位信息保存到本地----------------------
+function downloadJson(data) {
+    var blob = new Blob([JSON.stringify(data)], { type: "" });
+    saveAs(blob, "data.json");
+}
+
+//-----------------应用设置时，写入操作日志--------------------------------
+function infoLog(){
+   // alert('log')
+    curUserInfo = JSON.parse(MainWindow.GetCurUserInfo());
+    var modeltitle=$('.dis').children('h4').text();
+        var title=strJson.strings.log_user+curUserInfo.user+strJson.strings.log_do+modeltitle+strJson.strings.log_module;
+        FILTER_LOG={
+            time:times,
+            state:title,
+            //msg: str
+                    
+                    
+        };
+        MainWindow.WriteSetLog(JSON.stringify(FILTER_LOG))//写入日志数据库
+
+}//----------end日志---------/
+
+//----------------------数据组合排列，生成分档信息----------------------------------
+function filterData(){
+    var inplist=[];txtlist=[];i=0;k=0
+       
+       sec= $('select[name]').not(':hidden')
+       txt=$('textarea[name=datas]').not(':hidden')
+       inp= $('input[name=param]').not(':hidden')
+      
+       inp.each(function(){
+         
+           values=$(this).val();
+           inplist[i++]=values
+           });
+           
+           i=0;
+           txt.each(function(){
+               
+           values=$(this).val();
+           var txtarr=values.split(/[,\n]/);
+           txtarr = $.grep(txtarr,function(n){
+               return $.trim(n).length >0;    
+           });
+           txtlist[k++]=txtarr;           
+       })
+   
+       var ret = doExchange(txtlist);    
+       console.log("共有：" + ret.length + "种组合！");    
+       for (var i = 0; i < ret.length; i++) {
+           console.log(ret[i]);     
+          /*  */
+        }
+           ret.push('others');
+           $("#parmList").empty();
+           var $trTemp = $("<tr></tr>");
+           paramVal=inplist.toString(); 
+           $trTemp.append("<th>"+ paramVal +"</th>");
+           $trTemp.append("<th>"+ strJson.strings. grade_class +"</th>");
+           $trTemp.appendTo("#parmList"); 
+       if(inplist.length>0){
+           $("#showDiv").show();     
+           for(i=0,k=i;i<ret.length;i++){
+               var $trTemp = $("<tr></tr>");
+               className='class'+i;
+               $trTemp.append("<td>"+ ret[i] +"</td>");
+               $trTemp.append("<td>"+ '<input type="text" name=value value='+className+' />' +"</td>");
+               $trTemp.appendTo("#parmList");            
+               gradeVal=$('select[name=grade]').val();
+               datasend[++k]={grade:gradeVal,param:paramVal,datas:ret[i],name:className}
+           }
+           /* other="<td>"+ '<input value='+className+' />' +"</td>"
+          $("#parmList").last('tr').append(other)*/
+           $("#filter_btnSvae").show(); 
+       }
+}
+
+$(function() {
+    var availableTags = [];
+    paramsJson=JSON.parse(MainWindow.GetRaname());
+    keyArr=Object.keys(paramsJson);
+     // alert(keyArr);
+    for(var i=0;i<keyArr.length;i++){
+       var key=keyArr[i];
+       byname=paramsJson[key].byname;
+       availableTags[i]=byname
+    }
+      //alert(availableTags)
+    //----------------自动完成----------------
+    $( 'input.autocomplate').autocomplete({
+    source: availableTags
+    });
+
+
+//-----------1.设置blur事件的校验-------------------------
+$('select[name=grade]').change(function(){//分档级别选择
+  
+    val=this.value;
+    if(val.length<1){
+        $(this).data({'s':0});
+        //通过data往Jquery对象上赋值,不符合条件，s返回0
+        $(this).next().show()
+        //alert(  $(this).data('s'))
+    }else{
+        $(this).data({'s':1});//符合条件，s返回1
+        $(this).next().hide();
+        $("#filter_btnNext").show()
+       
+        if(val==1){
+            $(" #params1").show();
+                $("#datas1").show();
+                $(" #params2").hide();
+                $("#datas2").hide();
+                $(" #params3").hide();
+                $("#datas3").hide();
+                $(" #params4").hide();
+                $("#datas4").hide();
+            for ( var c = 0,k=1; c <1; c++,k++) {
+               /*  $('<textarea>', {
+                id: 'datas'+k, name: 'grade',class:'form-control', width:'240px',height:'34px',blur: function(){validation()}
+                            },
+            '<textarea/>'
+            ).appendTo($("#datas1"))
+             */
+            //$('div#params').clone(true).insertAfter("div#params");
+               
+            }
+        }
+        if(val==2){
+            
+            $(" #params1").show();
+            $("#datas1").show();
+            $(" #params2").show();
+            $("#datas2").show();
+            $(" #params3").hide();
+            $("#datas3").hide();
+            $(" #params4").hide();
+            $("#datas4").hide();
+                //
+            // for ( var c = 0,k=1; c <2; c++,k++) {
+            //     nk=parseInt(val)+c;
+            //     $("#datas1").clone(true).insertAfter( $(" #params"+nk));
+            //   /*  $('<input />', {id: 'param'+k,class:'autocomplate', name: 'param'+k,type: 'text'
+            //     }).appendTo($('div#params')); */
+            // }
+           
+        }
+        if(val==3){
+            $(" #params1").show();
+            $("#datas1").show();
+            $(" #params2").show();
+            $("#datas2").show();
+            $(" #params3").show();
+            $("#datas3").show();
+            $(" #params4").hide();
+            $(" #datas4").hide();
+           
+            // for ( var c = 0,k=1; c <3; c++,k++) {
+            //     nk=parseInt(val)+c;
+            //     $("#datas1").clone(true).insertAfter( $(" #params"+nk));
+            //   /*  $('<input />', {id: 'param'+k,class:'autocomplate', name: 'param'+k,type: 'text'
+            //     }).appendTo($('div#params')); */
+            // }
+
+         }
+         
+         if(val==4){
+            $(" #params1").show();
+            $("#datas1").show();
+            $(" #params2").show();
+            $("#datas2").show();
+            $(" #params3").show();
+            $("#datas3").show();
+            $(" #params4").show();
+            $("#datas4").show();
+            // for ( var c = 0,k=1; c <4; c++,k++) {
+            //     nk=parseInt(val)+c;
+            //     $("#datas1").clone(true).insertAfter( $(" #params4"+nk));
+            //   /*  $('<input />', {id: 'param'+k,class:'autocomplate', name: 'param'+k,type: 'text'
+            //     }).appendTo($('div#params')); */
+            // }
+          
+             }
+
+         
+    };
+})
+/* $('input[name=param]').blur(function(){//分档依据输入
+   
+   val=this.value;
+   result=$.inArray(val,availableTags);//在数组中找val
+   // alert(result+'--'+val.length)
+   
+   if(val.length<1||result<0){//reresult没找到返回-1
+       $(this).data({'s':0});
+       //通过data往Jquery对象上赋值,不符合条件，s返回0
+       $(this).next().show();
+       $(this).focus();
+   }else{//result找到则返回在数组中的索引
+       
+       $(this).data({'s':1});//符合条件，s返回1
+       $(this).next().hide();
+   };
+}) */
+$('input[name=param]').blur(function(){//分档依据输入
+    val=this.value;
+    result=$.inArray(val,availableTags);//在数组中找val
+    // alert(result+'--'+val.length)
+  
+    if(result!=-1){//reresult没找到匹配值返回-1
+        var inp=$('input[name=param]').not(':hidden');
+         $(this).next().hide();
+         $(this).data({'s':1});
+        for(var i=0;i<inp.length;i++){
+            
+            for(var j=i+1;j<inp.length;j++){
+                if(inp[i].value!=""&&inp[j].value!=""){
+                    if(inp[i].value!=inp[j].value){ //验证参数依据输入不重复
+                    //alert(inp[i].value.length+'--'+inp[i].value+inp[j].value);
+                  
+                    $(this).data({'s':1});//符合条件，s返回1
+                    $(this).next().hide();
+                }else {
+                   
+                    $(this).data({'s':0});//通过data赋值,不符合条件，s返回0
+                    $(this).next().text(strJson.avt_grade.err1);
+                    $(this).next().show();
+                    $(this).focus();
+                };
+                }
+               
+                
+            }
+        }
+      
+   }else{//输入值不匹配或为空
+       $(this).data({'s':0});//符合条件，s返回1
+       $(this).next().text(strJson.avt_grade.err2);
+       $(this).next().show();
+       $(this).focus();
+   };
+
+  
+   
+})
+$('textarea[name=datas]').blur(function(){
+    val=this.value;
+    reg= /^(\[\d+(\.\d+)?\-\d+(\.\d+)?\)+\,)*$/.test(val);
+
+    if(reg==true){
+        $(this).data({'s':1});
+        //通过data往Jquery对象上赋值,符合条件，s返回1
+        $(this).next().hide()
+    }else{
+        $(this).data({'s':0});//不符合条件，s返回0
+        $(this).next().show();
+        $(this).focus();
+    };
+})
+
+
+//---------点击确定进行输入验证，执行插入分档信息-------------------
+$("#filter_btnNext").click(function(){
+    var txt=$('textarea[name=datas]').not(':hidden');
+    var inp= $('input[name=param]').not(':hidden');
+    var len=inp.length+txt.length;//表单元素数量
+    var inputTot=0,txtTot=0;
+    var tip='<span class="text-danger">'+'该参数输入重复'+'</span>';
+    $('input[name=param]').blur();
+    $('textarea[name=datas]').blur();
+    inp.each(function(){
+    //遍历input，累加input对象上data('s')值
+    inputTot+= $(this).data('s');
+    //alert(inputTot)
+    });
+    txt.each(function(){
+        //遍历input，累加textarea对象上data('s')值
+        txtTot+= $(this).data('s');
+       // alert(txtTot)
+    })
+    var totle=inputTot+txtTot;//data总数
+    //alert(totle)
+    if(totle==len){//判断tot值，执行插入分档信息
+        filterData() 
+    }else{//不等于3，返回
+        return false 
+    }                
+    
+})
+
+//-----------------保存分档文件----------------------
+$('#filter_btnSvae').click(function(){
+    var newName=[];i=0;
+    newInp=$("#parmList input");
+    newInp.each(function(){
+        val=$("#parmList input").eq(i).val()
+        newName[i++]=val;
+        //遍历表格中的文档名并保存
+    })
+    for(i=0,k=1;i<newName.length;i++,k++){
+        keyarr=Object.keys(datasend)[i];
+        datasend[keyarr].name=newName[i]
+       // 对datasend的name值更新（即新文档名）
+    }
+   
+    MainWindow.SaveGradeInfo(JSON.stringify(datasend));
+    infoLog(); 
+    MainWindow.SetApplay();
+    //alert(strJson.public.sucess);
+    layer.msg(strJson.public.sucess, {
+        icon:1
+     });
+    
+})
+
+$("#btnCurrFilter").click(function(){
+    currFilter();//读取数据，当前应用配置
+    if($('#getData').is(':hidden')){
+        $('#getData').show()
+    }else{
+        $('#getData').hide()
+    }  
+    //显示/隐藏切换
+})
+
+// $( "#sortable-f,#sortable-v" ).sortable();
+// $( "#sortable-f,#sortable-v" ).disableSelection();
+loadProperties();//国际化
+});
+
+</script>
+</head>
+<body>
+
+    <div class="col-sm-12" >
+        <section class="branch-section">
+            <form class="form-horizontal">
+                <div class="form-group">
+                        <label class="col-sm-3 control-label"></label>
+                        <div class=" col-sm-9 ">
+                            <!-- <input type="file" id="files" style="display:none" onchange="imports()"/> -->
+                            <button type="button" id="btnCurrFilter" class="btn btn-default btn-sm" data-locale="currentSettings">当前设置</button>
+                        </div> 
+                        
+                </div>
+                <div class="form-group">
+                    <div id="getData" class="col-sm-offset-3 col-sm-9" style="display: none" ></div>
+                </div>
+                <div class="form-group">
+                        <label class="col-sm-3 control-label" data-locale="grade">分档级别：</label>
+                        <div class="col-sm-9" >
+                        <select id="grade" name="grade" type="text" class="form-control" >
+                                <option  value="0" data-toggle="tooltip" data-placement="center" data-locale="gradeSelect">请选择</option>
+                                <option  value="1" data-toggle="tooltip" data-placement="center" data-locale="gradeOne">一级</option>
+                                <option  value="2" data-toggle="tooltip" data-placement="center" data-locale="gradeTwo">二级</option>
+                                <option  value="3" data-toggle="tooltip" data-placement="center" data-locale="gradeThree">三级</option>
+                                <option  value="4" data-toggle="tooltip" data-placement="center" data-locale="gradeFour">四级</option>
+                        </select>
+                        </div>
+                
+                </div>
+                
+                <div id="params1"  class="form-group">
+                    <label class="col-sm-3 control-label" data-locale="gradeBasis">分档依据：</label>
+                    <div class="col-sm-9" >
+                            <input id="param1" name="param" type="text" class="form-control autocomplate" placeholder="请输入分档依据一">
+                            <span class="text-danger"></span>
+                    </div>
+                </div>
+                <div id="datas1" class="form-group">
+                    <label class="col-sm-3 control-label" data-locale="gradeRange">分档范围：</label>
+                    <div class="col-sm-9" >
+                        <textarea class="form-control" name="datas" rows="2" title="请按“[最小值-最大值)”格式输入分档范围值，每对值以逗号分隔。前一对值的最大值必须小于下一对值的最最小值" >[0-1),[1-2),[2-3),</textarea>
+                        <span class="text-danger">请检查格式错误！</span>
+                    </div>
+                </div>
+                <div id="params2"  class="form-group">
+                    <label class="col-sm-3 control-label" data-locale="gradeBasis">分档依据：</label>
+                    <div class="col-sm-9" >
+                        <input id="param2" name="param" type="text" class="form-control autocomplate" placeholder="请输入分档依据二">
+                        <span class="text-danger"></span>
+                    </div>
+                </div>
+                <div id="datas2" class="form-group">
+                    <label class="col-sm-3 control-label" data-locale="gradeRange">分档范围：</label>
+                    <div class="col-sm-9" >
+                        <textarea class="form-control" name="datas" rows="2" title="请按“[最小值-最大值)”格式输入分档范围值，每对值以逗号分隔。前一对值的最大值必须小于下一对值的最最小值" >[0-10),[11-20),[21-30),</textarea>
+                        <span class="text-danger">请检查格式错误！</span>
+                    </div>
+                </div>
+                <div id="params3"  class="ui-widget form-group">
+                    <label class="col-sm-3 control-label" data-locale="gradeBasis">分档依据：</label>
+                    <div class="col-sm-9" >
+                        <input id="param3" name="param" type="text" class="form-control autocomplate" placeholder="请输入分档依据三">
+                        <span class="text-danger"></span>
+                    </div>
+                </div>
+                <div id="datas3" class="form-group">
+                    <label class="col-sm-3 control-label" data-locale="gradeRange">分档范围：</label>
+                    <div class="col-sm-9" >
+                        <textarea class="form-control" name="datas"  rows="2" title="请按“[最小值-最大值)”格式输入分档范围值，每对值以逗号分隔。前一对值的最大值必须小于下一对值的最最小值" >[0-1),[1-2),[2-3),</textarea>
+                        <span class="text-danger">请检查格式错误！</span>
+                    </div>
+                </div>
+                <div id="params4"  class="ui-widget form-group">
+                    <label class="col-sm-3 control-label" data-locale="gradeBasis">分档依据：</label>
+                    <div class="col-sm-9" >
+                        <input id="param4" name="param" type="text" class="form-control autocomplate" placeholder="请输入依据名称">
+                        <span class="text-danger"></span>
+                    </div>
+                </div>
+                <div id="datas4" class="form-group">
+                    <label class="col-sm-3 control-label" data-locale="gradeRange">分档范围：</label>
+                    <div class="col-sm-9" >  
+                        <textarea class="form-control" name="datas" rows="2" title="请按“[最小值-最大值)”格式输入分档范围值，每对值以逗号分隔。前一对值的最大值必须小于下一对值的最最小值" >[0-10),[11-20),[21-30),</textarea>
+                        <span class="text-danger">请检查格式错误！</span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <div class=""></div>
+                    <div class="col-sm-offset-3 col-sm-9">
+                            <button id="filter_btnNext" type="button" class="btn btn-info" data-locale="toGrade" > &nbsp;&nbsp;确 定&nbsp;&nbsp; </button>
+                    </div>
+                </div>
+            </form>
+            <div id="showDiv" class="form-horizontal" style="display: none" >
+                <div class="form-group">
+                    <label class="col-sm-3 control-label" data-locale="preview">设置预览</label>
+                    <div class="col-sm-9" >  
+                        <table id="parmList" class="table table-responsive" style="max-width: 80%"></table>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-sm-offset-8 col-sm-4">
+                        <button id="filter_btnSvae" type="button" class="btn btn-primary" data-locale="save">&nbsp;&nbsp;保存&nbsp;&nbsp;</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>  
+
+    <script>
+            $.fn.toggle = function( fn, fn2 ) {
+            var args = arguments,guid = fn.guid || $.guid++,i=0,
+            toggle = function( event ) {
+                var lastToggle = ( $._data( this, "lastToggle" + fn.guid ) || 0 ) % i;
+                $._data( this, "lastToggle" + fn.guid, lastToggle + 1 );
+                event.preventDefault();
+                return args[ lastToggle ].apply( this, arguments ) || false;
+            };
+            toggle.guid = guid;
+            while ( i < args.length ) {
+                args[ i++ ].guid = guid;
+            }
+            return this.click( toggle );
+            };
+        </script>
+
+</body>
+</html>

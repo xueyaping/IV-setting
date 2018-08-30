@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>主界面</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- Bootstrap -->
+    <link href="./css/bootstrap.min.css" rel="stylesheet">
+    <script src="./js/jquery-1.12.4.js"></script>
+    <script src="./js/jquery.i18n.properties-1.0.9.js"></script>
+
+    <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+    <script src="https://cdn.bootcss.com/html5shiv/3.7.3/html5shiv.min.js"></script>
+    <script src="https://cdn.bootcss.com/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+        <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+ 
+    <!-- Include all compiled plugins (below), or include individual files as needed -->
+    <script src="./js/bootstrap.min.js"></script>
+    <script src="./js/vue.min.js"></script>
+    <script src="./js/layer/layer.js"></script>
+    <script src="./js/qrcode.min.js"></script>
+    <script src="./js/config.js"></script>
+    <script type="text/javascript">
+    //禁止页面右键
+        // document.oncontextmenu=new Function("event.returnValue=false;");
+        // document.onselectstart=new Function("event.returnValue=false;");
+    //禁止文本选择
+        var omitformtags=["input", "textarea", "select"];
+        omitformtagsomitformtags=omitformtags.join("|");
+        function disableselect(e){
+        if (omitformtags.indexOf(e.target.tagName.toLowerCase())==-1){
+        return false;
+        }
+        }
+        function reEnable(){
+        return true;
+        }
+        if (typeof document.onselectstart!="undefined"){
+        document.onselectstart=new Function ("return false");
+        }else{
+        document.onmousedown=disableselect;
+        document.onmouseup=reEnable;
+        }
+        
+        </script>
+    <style>
+html {
+  overflow-y: scroll;
+}
+
+:root {
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+:root body {
+  position: absolute;
+}
+
+body {
+  width: 100vw;
+  overflow: hidden;
+  font-family: 'Micros Yahei','微软雅黑'
+}
+
+i.small{color: #2472A9}
+label{
+    font-weight: normal
+}
+.dis{display: block}
+.undis{display: none}
+.list-group-item{text-indent: 20px;}
+a:focus, a:hover {
+    /* color: #23527c; */
+    text-decoration: none;
+    outline: none
+}
+.navbar-inverse{
+    /* background-image: linear-gradient(to right,#007Acc 0,#3498db 100%); */
+    /* background-image: linear-gradient(to right,#3367D6 0,#337ab7 120%); */
+    background:#337ab7; 
+    /* background:#007acc; */
+    border-color: #007Acc
+    }
+.navbar-brand {
+    float: left;
+    height: 70px;
+}
+.jumbotron {
+   
+    padding-bottom: 10px;
+    text-align: left;
+    color: #ffffff;
+    text-shadow: 0 1px 0 rgba(0,0,0,.9);
+    /* background-color: #3498db; */
+    /* background-image: linear-gradient(to right,#007Acc 0,#3367D6 100%); */
+    background-repeat: repeat-x;
+}
+.header-title{
+    margin-top: 26px;
+    font-size:26px;
+    }
+
+
+/* 菜单栏固定 */
+.main-sidebar.affix {
+    position: fixed;
+    top: 74px;
+    left: 0;
+    min-width: 200px;
+}
+.panel,.list-group-item{background:transparent}/* 菜单文字背景 */
+
+.panel-group{
+    margin-top:32px;
+    text-indent: 20px;
+}/* 侧边菜单标题边距 */
+.main{padding-left: 5%;padding-right: 5%}
+.main-sidebar {
+    /* padding-left: 40px; */
+    /* padding-top:20px; */
+    /* padding-right: 10px; */
+    height: calc(100% - 60px);
+    /* background:rgb(236, 240, 241); */
+     background:rgb(241, 241, 241);
+    /* box-shadow:0px 3px 2px 0px rgba(0,0,0,.5);  */
+}
+a.list-group-item:focus,.on{background:rgb(255, 255, 255);margin-right:-1px}
+/* a.list-group-item:focus, a.list-group-item:hover{background:rgb(185, 195, 199)} */
+.main-sidenav {
+    margin-top: 20px;
+    margin-bottom: 20px;
+}
+.main-section {
+    margin-top: 30px;
+    margin-bottom: 30px;
+}
+.main-section:last-child {
+    margin-bottom: 60px;
+}
+
+
+.userInfo{
+    float:right;
+    margin-top: -10px;
+    font-size: 16px;
+    margin-bottom:-20px;
+    margin-right:20px;
+    padding-top: 0
+}
+.layui-layer-setmybg{
+    text-align: center;
+    background-color: #2F4056;
+    opacity: 0.8;
+    color: #ffffff
+}
+    </style>
+</head>
+
+        
+<script>
+
+ var defaultSet;
+ var defaultSetStr;
+ var paramsJson;
+ var keyArr=[];
+ var getLanguage;
+ var strJson={};
+  function loadProperties() { 
+    getLanguage =MainWindow.GetLanguage();
+    $.i18n.properties({  
+       name:'string_'+getLanguage,    //属性文件名     命名格式： 文件名_国家代号.properties
+       path:'./i18n/',   //注意这里路径是你属性文件的所在文件夹
+       mode:'map',
+       async:false,
+       // language:$.i18n.browserLang(),
+       language:getLanguage,     //这就是国家代号 name+language刚好组成属性文件名：strings+zh -> strings_zh.properties
+       callback:function(){  
+            $("[data-locale]").each(function(){  
+                $(this).html($.i18n.prop($(this).data("locale")));  
+            }); 
+           
+            //--placeholder国际化 
+            $("input[name=username]").each(function(){
+                $("input[name=username]").attr("placeholder",$.i18n.prop('username'));
+            })
+            $("input[name=password]").each(function(){
+                $("input[name=password]").attr("placeholder",$.i18n.prop('password'));
+            })
+            $("input[name=param]").each(function(){//分档依据 
+                $("input[name=param]").attr("placeholder",$.i18n.prop('parameter_inputStr'));
+            }) 
+            $("#pwdModify").attr("placeholder",$.i18n.prop('pwdModify_inputStr'));//修改密码
+            $("#fileNameVal").attr("placeholder",$.i18n.prop('filename_inputStr'));//自定义文件名
+            $("#configName").attr("placeholder",$.i18n.prop('planName_inputStr'));//配方名
+           $("textarea[title]").each(function(){//分档范围title说明
+                $(this).attr("title",$.i18n.prop('datasTitle'));
+            })
+            $("#selectDiv").attr("title",$.i18n.prop('parameterListTilte'));
+            $("#select-result").attr("title",$.i18n.prop('parameterSortTilte'));
+
+            if(getLanguage=='CN'){   
+                strJson={
+                    avt_corr:{
+                        err1:'待测电池片数量不正确',
+                        err2:'请输入正确数值',
+                        err3:'目标温度应设为25±',
+                    },
+                    avt_grade:{
+                        err1:'该参数已存在',
+                        err2:'请输入合法参数',
+                    },
+                    avt_sort:{
+                        err1:'请点击“浏览按钮”，创建工作目录',
+                        err2:'参数排序已改变，请点击“浏览”按钮创建工作目录',
+                        err3:'请输入文件名'
+                    },
+                    avt_users:{
+                        exists_err:'用户名已存在',
+                        new_psd:'请输入新密码',
+                        value_err:'输入字符格式或长度不匹配',
+                    },
+                    public:{     
+                        sucess:'操作成功',
+                        failed:'初始配置，无法删除!',
+                        input_err:'请输入有效值',
+                        config_applied:'当前配方应用中!',
+                        chbox_warn:'请选择操作对象!',
+                        reset_warn:'操作失败，管理员密码不可重置！',
+                        functionchbox_warn:'您还未勾选选择授权模块!',
+                        del_confirm:'确定要删除所选对象么？',
+                        confirm_no:'取消',
+                        confirm_yes:'确定'
+                    },
+                    strings:{
+                       // grade_other:'其他',
+                        grade_class:'档位名称',
+                        log_user:'用户',
+                        log_do:'设置了',
+                        log_module:'模块',
+                        log_plan:'配方',
+                        log_applied:'已应用',
+                        log_delete:'已删除',
+                        log_create:'已创建',
+                        log_psdReset:'密码已重置',
+                        log_psdChanged:'密码已修改',
+                        log_totle:' 共',
+                        log_page:'页',
+                        log_record:'记录'
+                    }
+                }
+            }else{
+                strJson={
+                    avt_corr:{
+                        err1:'The number of cells is not correct',
+                        err2:'Please enter valid values',
+                        err3:'The input value should be 25±1',
+                    },
+                    avt_grade:{
+                        err1:'The parameter already exists',
+                        err2:'Invalid input value',
+                    },
+                    avt_sort:{
+                        err1:'Click “Brows” to create the working directory.',
+                        err2:'Sort changed，please to change the working directory.',
+                        err3:'Please enter the custom filename'
+                    },
+                    avt_users:{
+                        exists_err:'The user already exists',
+                        new_psd:'Enter the new password',
+                        value_err:'the string format or length mismatch'
+                    },
+                    public:{
+                        sucess:'Operation successfully!',
+                        failed:'Operation failed',
+                        input_err:'Please enter valid values',
+                        config_applied:'The object is being applied!',
+                        chbox_warn:'Please checked the object',
+                        reset_warn:'Operation failed, The administrator password cannot be reset',
+                        functionchbox_warn:'Please check the function module',
+                        del_confirm:'Are you sure delete object？',
+                        confirm_no:'No',
+                        confirm_yes:'Yes'
+                    },
+                    strings:{
+                        //grade_other:'others',
+                        grade_class:'classname',
+                        log_user:'User ',
+                        log_do:' has set up the ',
+                        log_module:' module',
+                        log_plan:'Config Plan ',
+                        log_applied:' has been applied!',
+                        log_delete:' has been delete!',
+                        log_create:' has been created!',
+                        log_psdReset:' Password has been reset!',
+                        log_psdChanged:' modify the password!',
+                        log_total:' Total ',
+                        log_page:' page',
+                        log_record:' record'
+                    }
+                }
+            }
+       }
+   });  
+
+
+
+
+  
+ /*   if(defautLan=='en'){
+    $.i18n.properties({  
+       name:'string_en',    //属性文件名     命名格式： 文件名_国家代号.properties
+       path:'./i18n/',   //注意这里路径是你属性文件的所在文件夹
+       mode:'map',
+       async:false,
+       // language:$.i18n.browserLang(),
+       language:"en",     //这就是国家代号 name+language刚好组成属性文件名：strings+zh -> strings_zh.properties
+       callback:function(){  
+            $("[data-locale]").each(function(){  
+                //  alert($(this).data("locale"));
+                $(this).html($.i18n.prop($(this).data("locale")));  
+            }); 
+       }  
+   });  
+
+   } */
+  
+} 
+//-----------------------当前用户权限与功能显示------------------------------
+function curUserRights(){
+  var curUserRights; 
+  //curUserRights={func:"111111111",level:0,logintimer:2018-06-20,user:"xue"};
+ curUserRights = JSON.parse(MainWindow.GetCurUserInfo());
+  func=curUserRights.func;
+  var funcStr=func.split('');
+    //分割功能码字符串
+    if(curUserRights.level!=='1'&&curUserRights.user!=='Gsolar'){
+       $(".adminRights").hide();
+        for(var i=0,h=1;i<funcStr.length;i++,h++){
+            var tabs=$("#tab_1"+h); 
+            if(funcStr[i]=='1'){//依次解析功能码字符串
+                tabs.show();
+            //功能码字符串==1时，对应顺序权限模块显示
+            }else{
+                tabs.hide();
+            }
+    
+        }
+    }else{
+        $(".adminRights").show();
+        //alert(curUserRights.user)
+    }
+  
+}
+
+
+
+//-----------------------------菜单tab加载页面--------------------------
+ 
+  function dataCorrection(){//数据修正
+    loadProperties();//国际化
+    $("#tabs_correction").load('./data_correction.html');
+      
+  }
+  function dataAcquisition(){//数据采集
+    loadProperties();//国际化
+    $("#tabs_dataAcquisition").load('./data_acquisition.html');
+  }
+  function dataSort(){//数据显示保存排序
+    $("#tabs_saveData").load('./data_sort.html');
+  } 
+  function SNSet(){//序列号设置
+    loadProperties();//国际化
+    $("#tabs_SNset").load('./setting_SN.html');
+  }
+  function dataFilter(){//分档
+    loadProperties();//国际化
+    $("#tabs_dataFilter").load('./data_filter.html');
+  }  
+  function warningSet(){//报警设置
+    loadProperties();//国际化
+    $("#tabs_warningSet").load('./setting_warn.html');
+  }
+  
+  function subDeviceSet(){//外设设置
+    $("#tabs_subDeviceSet").load('./sub_device.html');
+  }
+  function deviceInfo(){
+   
+    $("#tabs_deviceInfo").load('./device_info.html');
+  }
+  function configPlan(){//配置方案
+   
+    $("#tabs_configPlan").load('./config_plan.html');
+  }  
+  function userManagement(){//用户管理
+   
+    $("#tabs_userManagement").load('./user_magmt.html');
+  }
+  function userRights(){//用户权限
+   
+    $("#tabs_userRights").load('./user_rights.html');
+  }
+  function currUserLoad(){//当前用户
+    loadProperties();//国际化
+    $('#tabs_currUser').load('./current_user.html');    
+  }
+ function logLoad(){//日志
+    $('#tabs_log').load('./info_log.html');
+   
+ }
+//-------------侧边栏菜单切换-----------------------
+  function g(o){return document.getElementById(o);}
+  function HoverLi(m,n,counter){
+    for(var i=1;i<=counter;i++){
+        g('tab_'+m+i).className='';
+        g('tabs_'+m+i).className='undis';
+    }
+    g('tabs_'+m+n).className='dis';
+    g('tab_'+m+n).className='on';
+    
+  }
+
+//------------------时间获取----------------------------------------------
+var date=new Date();
+var yearStr=date.getFullYear();
+var monthStr=date.getMonth()+1;
+var dateStr=date.getDate();
+var timeStr=date.getHours();
+var minuteStr=date.getMinutes();
+var secondStr=date.getSeconds();
+var times='';
+function getTimes(){
+    if (monthStr < 10) monthStr = "0" + monthStr;
+    if (dateStr < 10) dateStr = "0" + dateStr;
+    if (timeStr < 10) timeStr = "0" + timeStr;
+    if (minuteStr < 10) minuteStr = "0" + minuteStr;
+    if (secondStr < 10) secondStr = "0" + secondStr;
+    times=yearStr+"-"+monthStr+"-"+dateStr+"-"+timeStr+":"+minuteStr+":"+secondStr;
+
+}
+
+
+
+//--------------------基本输入校验-----------------------------------------
+function vatlidateInput(txt){
+    
+    var reg=/^\d+(\.\d+)?$/; 
+    // var errtxt="<span id='errtxt' class='text-danger'> 输入类型不正确</span>"
+     val=txt.val();
+     
+     if(reg.test(val)==true){
+     //alert("都是数字！通过");
+       $(txt).next().hide();
+       $(txt).data('s',1)
+    //  return true;
+     }else{
+        // $("#errtxt").remove();
+        $(txt).next().text(strJson.public.input_err);
+         $(txt).next().show();
+         $(txt).focus();
+         $(txt).data('s',0)
+         return false;
+       
+     }
+  
+ }
+function vatlidateInput_Float(floatTxt){
+    var a = "1.0000";
+    var reg=/^\d+(\.\d+)?$/; 
+    var flaotReg= /^\d+\.\d\d\d\d$/; 
+    // var errtxt="<span id='errtxt' class='text-danger'> 输入类型不正确</span>"
+     val=floatTxt.val();
+    
+  
+        if(flaotReg.test(val)==true){
+            //alert("都是数字！通过");
+            $(floatTxt).next().hide();
+            $(floatTxt).data('s',1)
+            //  return true;
+        
+    } else{
+        // $("#errtxt").remove();
+         $(floatTxt).next().text("请输入X.XXXX格式小数");
+         $(floatTxt).next().show();
+         $(floatTxt).focus();
+         $(floatTxt).data('s',0);
+         return false;
+       
+     }
+  
+ }
+ 
+$(function(){
+    currUserLoad();
+    getTimes()
+    curUserRights();
+    configPlan();
+    userManagement();
+    userRights();
+    dataCorrection();
+    dataAcquisition();
+    SNSet();
+    dataSort();
+    dataFilter();
+    warningSet();
+    subDeviceSet();
+    deviceInfo();
+   // loadProperties();//国际化
+    $(".collapsed ").click(function(){//菜单箭头切换
+        cls=$(this).children('small').attr("class");
+        glydown="glyphicon glyphicon-menu-down text-muted";
+        glyup="glyphicon glyphicon-menu-up text-muted";
+      if(cls==glyup){
+        $(this).children('small').removeClass(glyup)
+          $(this).children('small').addClass(glydown)
+      } else{
+        $(this).children('small').removeClass(glydown)
+          $(this).children('small').addClass(glyup)
+      }
+     
+    })
+})     
+</script>
+<body>
+              
+    <div class="jumbotron">
+        <div class="navbar navbar-inverse navbar-fixed-top">
+                <div class="container-fluid">
+                    <div class="navbar-header">
+                        <a class="navbar-brand" href="#">
+                            <img alt="Brand" src="./images/logo-white.png" width="140px">
+                        </a>
+                    </div>   
+                    <nav class="nav navbar-nav">
+                        <h3 class="header-title" data-locale="headerTitle">IV软件设置管理</h3>
+                        
+                    </nav>  
+                </div>
+        </div>
+    </div> 
+    <div class="container-fluid">
+        <div class="row">
+        <div class="col-sm-3 com-md-2" role="complementary">
+            <nav class="nav main-sidebar affix "><!-- 侧边栏> -->
+                <div id="tablist" class="panel-group" role="tablist">
+                            <div class="panel">
+                              <div class="panel-heading" role="tab" id="collapseListGroupHeading1">
+                                <h4 class="panel-title">
+                                  <a class="collapsed" role="button" data-toggle="collapse" href="#collapseListGroup1" aria-expanded="false" aria-controls="collapseListGroup1"><span data-locale="baseSettings">
+                                     基本设置</span><small class="glyphicon glyphicon-menu-up text-muted"></small>
+                                  </a>
+                                </h4>
+                              </div>
+                              <div id="collapseListGroup1" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="collapseListGroupHeading1">
+                                <ul class="list-group list-unstyled">
+                                    <li href="#tabs_11" id="tab_11" onclick="HoverLi(1,1,13)" class=""><a class="list-group-item" href="#" onclick="dataCorrection();" data-locale="correction">修正设置</a></li>
+                                    <li href="#tabs_12" id="tab_12" onclick="HoverLi(1,2,13)" class=""><a class="list-group-item" href="#" onclick="dataAcquisition()" data-locale="acquisition">数据采集</a></li>
+                                    <li href="#tabs_13" id="tab_13" onclick="HoverLi(1,3,13)" class=""><a class="list-group-item" href="#" onclick="SNSet()" data-locale="snSettings">序列号设置</a></li>
+                                    <li href="#tabs_14" id="tab_14" onclick="HoverLi(1,4,13)" class=""><a class="list-group-item" href="#" onclick="dataSort()" data-locale="saveData">保存显示</a></li>
+                                </ul>
+                              </div>
+                            </div>
+                            <div class="panel">
+                                <div class="panel-heading" role="tab" id="collapseListGroupHeading2">
+                                    <h4 class="panel-title">
+                                    <a class="collapsed" role="button" data-toggle="collapse" href="#collapseListGroup2" aria-expanded="false" aria-controls="collapseListGroup1">
+                                            <span data-locale="advancedSettings">高级设置</span><small class="glyphicon glyphicon-menu-down text-muted"></small>
+                                    </a>
+                                    </h4>
+                                </div>
+                                <div id="collapseListGroup2" class="panel-collapse collapse" role="tabpanel" aria-labelledby="collapseListGroupHeading1">
+                                    <ul class="list-group list-unstyled">
+                                        <li href="#tabs_15" id="tab_15" onclick="HoverLi(1,5,13)" class=""><a class="list-group-item" href="#" onclick="dataFilter()"  data-locale="dataFilter">分档设置</a></li>
+                                        <li href="#tabs_16" id="tab_16" onclick="HoverLi(1,6,13)" class=""><a class="list-group-item" href="#" onclick="warningSet()"  data-locale="alarmSettings">报警设置</a></li>
+                                        <li href="#tabs_17" id="tab_17" onclick="HoverLi(1,7,13)" class=""><a class="list-group-item" href="#" onclick="subDeviceSet()"  data-locale="subDevice">外设支持</a></li>
+                                        <li href="#tabs_18" id="tab_18" onclick="HoverLi(1,8,13)" class=""><a class="list-group-item" href="#" onclick="deviceInfo()" data-locale="deviceInfo">设备信息</a></li>
+                                        <li href="#tabs_19" id="tab_19" onclick="HoverLi(1,9,13)" class=""><a class="list-group-item" href="#" onclick="configPlan()" data-locale="configPlan" >配置方案</a></li>
+                                        <li href="#tabs_110" id="tab_110" onclick="HoverLi(1,10,13)" class="adminRights"><a class="list-group-item" href="#" onclick="" data-locale="userManagement">用户管理</a></li>
+                                        <li href="#tabs_111" id="tab_111" onclick="HoverLi(1,11,13)" class="adminRights"><a class="list-group-item" href="#" onclick="" data-locale="rightsManagement">权限管理</a></li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+            </nav>
+        </div>
+
+        <div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main" role="main">
+                <div class="dropdown pull-right">
+                        <button class="btn btn-default dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true" data-locale="userCenter">
+                         用户中心 <span class="caret"></span>
+                        </button>
+                        <ul class="dropdown-menu" aria-labelledby="dropdownMenu1">
+                          <li href="#tabs_112" id="tab_112"  onclick="HoverLi(1,12,13)" class="on" ><a href="#"  onclick="currUserLoad()" data-locale="currentUser">当前用户</a></li>
+                          <li href="#tabs_113" id="tab_113"  onclick="HoverLi(1,13,13)"><a href="#" onclick="logLoad()" class="blog" data-locale="operationLogs">操作日志</a></li>
+                          <!-- <li><a href="#">其它</a></li> -->
+                          <!-- <li role="separator" class="divider"></li> -->
+                        </ul>
+                </div>
+            <!-- <p href="#tabs_112" id="tab_112"   onclick="HoverLi(1,12,12)"><a href="#" onclick="currUserLoad()" class="userInfo">当前用户 <i class="glyphicon glyphicon-menu-down"></i></a></p> -->
+            <section id="tabs_11" class="undis">
+                <h4 class="page-header" data-locale="correctionSettings">数据修正</h4>
+                <div id="tabs_correction"></div>
+            </section>
+            <section id="tabs_12" class="undis">
+                <h4 class="page-header" data-locale="acquisitionSettings">数据采集</h4>
+                <div id="tabs_dataAcquisition"></div>
+            </section>
+            <section id="tabs_13" class="undis">
+                    <h4 class="page-header" data-locale="snSettings">序列号设置</h4>
+                    <div id="tabs_SNset"></div>
+            </section>
+            <section id="tabs_14" class="undis">
+                    <h4 class="page-header" data-locale="saveData">保存显示</h4>
+                    <div id="tabs_saveData"></div>
+            </section>
+            <section id="tabs_15" class="undis">
+                    <h4 class="page-header" data-locale="dataFilter">分档设置</h4>
+                    <div id="tabs_dataFilter" ></div>
+            </section>
+            <section id="tabs_16" class="undis">
+                    <h4 class="page-header" data-locale="alarmSettings">报警设置</h4>
+                    <div id="tabs_warningSet"></div>
+            </section>
+            <section id="tabs_17" class="undis">
+                    <h4 class="page-header" data-locale="subDeviceSupport">外设支持</h4>
+                    <div id="tabs_subDeviceSet"></div>
+            </section>
+            <section id="tabs_18" class="undis">
+                    <h4 class="page-header" data-locale="deviceInfo">设备信息</h4>
+                    <div id="tabs_deviceInfo"></div>
+            </section>
+            <section id="tabs_19" class="undis">
+                <h4 class="page-header" data-locale="configPlan">配置方案</h4>
+                <div id="tabs_configPlan"></div>
+            </section>
+            <section id="tabs_110" class="undis">
+                    <h4 class="page-header" data-locale="userManagement">用户管理</h4>
+            <div id="tabs_userManagement"></div>
+            </section>
+            <section id="tabs_111" class="undis">
+                <h4 class="page-header" data-locale="rightsManagement">权限管理</h4>
+                <div id="tabs_userRights"></div>                
+            </section>
+            <section id="tabs_112" class="dis">
+                <h4 class="page-header" data-locale="currentUser">当前用户</h4> 
+                <div id="tabs_currUser"></div>
+            </section>
+            <section id="tabs_113" class="undis">
+                <h4 class="page-header" data-locale="operationLogs">操作日志</h4> 
+                <div id="tabs_log"></div>
+            </section>
+        </div>
+        </div>
+        
+    </div>
+
+
+<script>
+
+    $.fn.toggle = function( fn, fn2 ) {
+    var args = arguments,guid = fn.guid || $.guid++,i=0,
+    toggle = function( event ) {
+        var lastToggle = ( $._data( this, "lastToggle" + fn.guid ) || 0 ) % i;
+        $._data( this, "lastToggle" + fn.guid, lastToggle + 1 );
+        event.preventDefault();
+        return args[ lastToggle ].apply( this, arguments ) || false;
+    };
+    toggle.guid = guid;
+    while ( i < args.length ) {
+        args[ i++ ].guid = guid;
+    }
+    return this.click( toggle );
+    };
+</script>
+
+<!--worker测试 传输数据-->
+<!-- <script>
+    $(function(){
+     
+        var m=new Worker('js/workers.js');//创建worker
+        alert(DEV_TXTSAVE)
+        // datas=JSON.stringify(DEV_TXTSAVE);
+       datas= MainWindow.ConfigRead(8)
+      
+        m.onmessage=function(evt){//结束workers传过来的函数
+            datas=JSON.parse(datas);
+            alert("闪光次数"+datas.dev.flash)
+        }
+       
+    })
+       
+</script> -->
+</body>
+</html>

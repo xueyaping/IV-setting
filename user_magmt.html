@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+ <!--    <link rel="stylesheet" href="./css/bootstrap.min.css"> -->
+   <!--  <link rel="stylesheet" href="./css/jquery-ui.css"> -->
+    <!-- <script src="./js/jquery-1.12.4.js"></script> -->
+  <!--   <script src="./js/jquery-ui.js"></script>
+    <script src="./js/FileSaver.min.js"></script> -->
+   
+    <title>当前用户</title>
+
+    <style>
+   /* .branch-div {
+      margin-top: 40px;
+      margin-bottom: 40px;
+    } */
+    .branch-section{
+      margin-bottom: 30px;
+    }
+    .branch-section:last-child{
+      padding-bottom: 60px;
+    }
+   
+    .title-header {
+      display: block;
+      width: 88%;
+      border-bottom: solid 1px #f5f5f5;
+      padding-bottom:6px;
+      font-size: 16px;
+      line-height: 1.5em;
+      margin-top:20px;
+      margin-bottom: 20px
+    }
+    </style>
+</head>
+<script>
+loadProperties();//国际化
+curUserInfo = JSON.parse(MainWindow.GetCurUserInfo());//当前用户
+//--------------------当前为管理员帐户时，生成用户列表-------------
+function getUserList(){
+  //当前登录用户
+ // var curUserInfo = JSON.parse(MainWindow.GetCurUserInfo());    
+  currUser=curUserInfo.user;
+  //alert("yes_" +MainWindow.GetCurUserInfo());
+  //{"Gsolar":{"func":"1010000","level":"1"}}
+  var userList=JSON.parse(MainWindow.GetUserList());
+  var keyarr=Object.keys(userList);
+  $("#userList").empty();
+ 
+  if(curUserInfo.level=='1'&&curUserInfo.user=="Gsolar"){  
+    //TH="<th  colspan='3'>"+"用户列表"+"<th>";
+    // TH2="<th>"+"用户名"+"<th>";
+    // TH3="<th>"+"用户类型"+"<th>";
+    // TR="<tr>"+TH+"</tr>";
+    // $(TR).appendTo("#userList");
+    for(var i=0;i<keyarr.length;i++){
+      key=keyarr[i]; 
+     // func=userList[key].func;
+      level=userList[key].level;
+      if(level=='1'&&key=='Gsolar'){
+        userType='administrator';
+        }else if(level=='0'){
+          userType='user';
+          };
+      chkbox="<label style=display:block>"+"<input name='userSelect' type='checkbox' class='user' style='margin-right:5px'>"+key+"</label>";
+      TD1="<td>"+chkbox+"<td>"; 
+      //TD2="<td class='user'>"+key+"<td>";
+      //TD1="<td>"+chkbox+"<td>"; 
+      TD3="<td class='func'>"+func+"<td>";
+      TD4="<td class='level'>"+userType+"<td>";
+      TR="<tr id=''>"+TD1+TD4+"</tr>";
+      $(TR).appendTo("#userList") 
+     
+      }
+  }  
+  checkboxSingle()//复选框单选
+}
+
+
+ //--------------------------复制用户--------------------------
+ function userClone(){//获取所选用户属性，作为默认值创建在信息表中
+  var userList=JSON.parse(MainWindow.GetUserList());
+  keyarr=Object.keys(userList);
+  keylen=parseInt(keyarr.length+1);
+
+  userChecked=$('input[name=userSelect]:checked');
+  if(userChecked.length!==1){
+      alert(strJson.public.chbox_warn)
+    }else{
+      var arrayContent = [];
+
+      var trData=$(userChecked).parents("tr");
+          usertd=trData.find(".user").text();
+          leveltd=trData.find(".level").text();
+          functd=trData.find(".func").text();
+        
+       $("#userList").hide();
+       $("#creatUserDiv").show();
+        userVal=$("#creatUserDiv input[name=username]").val(usertd+'_'+keylen);
+        psdVal=$("#creatUserDiv input[name=password]").val('');
+
+        var func=functd.split('');//分割功能码字符串
+        for(var i=0;i<func.length;i++){
+          var funcBox=$("#creatUserDiv input[name=func]");
+          if(func[i]=='1'){//依次解析功能码字符串
+            funcBox.eq(i).attr("checked",true);
+            //功能码字符串==1时，另对应顺序权限模块为选中状态
+           // alert(func[i])
+          }else{
+            funcBox.eq(i).attr("checked",false);
+          }
+        }
+        
+       // funcVal=$("#creatUserDiv input[name=level]:checked")
+  }
+}
+//-------------------------用户信息提交（新增,复制）,发送到数据库-----------------------
+function addUser(){
+  var userInfo={};
+  userVal=$("#creatUserDiv input[name=username]").val();
+  psdVal=$("#creatUserDiv input[name=password]").val();
+  var userRight=$("input[name=func]");
+  var str=[];i=0;
+  if(userRight.length>0){
+    userRight.each(function(){    
+      if($(this).is(":checked")){
+        func="1";
+      }else{
+        func="0"
+      } 
+      str[i++]=func;
+  
+    })
+  func=str.join("")
+  
+  }
+ userInfo={user:userVal,password:psdVal,level:'0',func:func}
+ //alert(userInfo.user+","+userInfo.password+","+userInfo.level+","+userInfo.func);
+
+ 
+  //{user:xxx,password:xxx,level:xxx,func:xxx}
+  sendObj= MainWindow.AddUser(JSON.stringify(userInfo));//,发送参数为对象
+  if(sendObj==1){
+    layer.msg(strJson.public.sucess, {
+      icon:1
+    });
+      //---------------写入操作日志--------------------
+        var modeltitle=$('.dis').children('h4').text();
+        var title=strJson.strings.log_user+curUserInfo.user+strJson.strings.log_do+modeltitle+strJson.strings.log_module+'；'
+        +strJson.strings.log_user+userInfo.user+strJson.strings.log_create;
+        
+        USER_LOG={
+            time:times,
+            state:title,
+            // msg: str
+        };
+        MainWindow.WriteSetLog(JSON.stringify(USER_LOG))//写入日志数据库
+      
+
+    $("#userList").show();
+    $('input[type="checkbox"]').removeAttr('checked');
+    $("#creatUserDiv input[name=username]").val("");
+    $("#creatUserDiv input[name=password]").val("");
+  }
+  $("#creatUserDiv").hide() 
+}
+
+//-------------------------用户密码重置-----------
+function restePassword(){
+  chkbox=$('input[type=checkbox]');
+  userChecked=$('input[name=userSelect]:checked');
+  if(userChecked.length!==1){
+      alert(strJson.public.chbox_warn)//请选择操作对象
+    }else{
+      var arrayContent = [];
+      var trData=$(userChecked).parents("tr");
+          userTxt=trData.find(".user").text();
+          funcTxt=trData.find(".func").text();
+          levelTxt=trData.find(".level").text();
+          if(levelTxt=="administrator"){levelTxt='1'};
+          if(levelTxt=="user"){levelTxt='0'};
+          if(userTxt!="Gsolar"){
+              var userModifyUser={};
+              userModifyUser={user:userTxt,password:'000',level:levelTxt,func:funcTxt};
+              sendObj= MainWindow.ModifyUser(JSON.stringify(userModifyUser));//,发送参数为对象
+              if(sendObj==1){
+                layer.msg(strJson.public.sucess, {
+                  icon:1
+                });;//操作成功
+
+                //---------------操作日志--------------------
+                var modeltitle=$('.dis').children('h4').text();
+                var title=strJson.strings.log_user+curUserInfo.user+strJson.strings.log_do+modeltitle+strJson.strings.log_module+'；'
+                +strJson.strings.log_user+userModifyUser.user+log_psdReset;
+                CASE_LOG={
+                    time:times,
+                    state:title,
+                    // msg: str
+                };
+                MainWindow.WriteSetLog(JSON.stringify(CASE_LOG))//写入日志数据库
+              }
+          }else{
+            alert(strJson.public.reset_warn);//管理员账户密码不可重置！
+          }
+      // alert(userTxt+funcTxt+levelTxt);
+      //{user:xxx,password:xxx,level:xxx,func:xxx}
+     
+    }
+}
+
+function deleteUser(){//移除指定用户
+  delChecked=$("input[name=userSelect]:checked");
+  //alert(delChecked)
+  if(delChecked.length!==1){
+      alert(strJson.public.chbox_warn)//请选择操作对象
+    }else{
+      var arrayContent = [];
+      var trData=$(delChecked).parents("tr");
+          userTxt=trData.find(".user").text();
+          funcTxt=trData.find(".func").text();
+          levelTxt=trData.find(".level").text();
+         // alert(userTxt+funcTxt+levelTxt);
+    var userdel=userTxt;
+    //userdel={user:userTxt,password:xxx,level:levelTxt,func:funcTxt}
+    delStr=MainWindow.DelUser(userTxt)//,参数为字符串
+    if(delStr==1){
+      //alert("del_"+delStr);
+      layer.msg(strJson.public.sucess, {
+        icon:1
+      });
+
+       //---------------操作日志--------------------
+       var modeltitle=$('.dis').children('h4').text();
+        var title=strJson.strings.log_user+curUserInfo.user+strJson.strings.log_do+modeltitle+strJson.strings.log_module+'；'
+        +strJson.strings.log_user+userTxt+strJson.strings.log_delete;
+        
+        CASE_LOG={
+            time:times,
+            state:title,
+            // msg: str
+        };
+        MainWindow.WriteSetLog(JSON.stringify(CASE_LOG))//写入日志数据库
+
+      getUserList()//更新用户列表
+    }
+  }
+}
+
+//--------------------checkbox单选限制------------------------
+function checkboxSingle(){
+  var fanxiBox = $("#userListDiv input:checkbox");
+  fanxiBox.click(function () {
+     if(this.checked || this.checked=='checked'){
+
+         fanxiBox.removeAttr("checked");
+         //这里需注意jquery1.6以后必须用prop()方法
+         //$(this).attr("checked",true);
+         $(this).prop("checked", true);
+       }
+  });
+}
+
+  function vatlidateNewUser(){//------------新增复制用户名密码校验
+    $('#creatUserDiv input[name=username]').blur();
+    $('#creatUserDiv input[name=password]').blur();
+    var userinp=$('#creatUserDiv input[name=username]');
+    var pwdinp=$('#creatUserDiv input[name=password]');
+    var len=userinp.length+pwdinp.length;//表单元素数量
+    var tot1=0,tot2=0;tot3=0;
+    userinp.each(function(){
+    tot1+=$(this).data('s');
+    //alert(tot1+'user--'+userinp.length)
+    })
+    pwdinp.each(function(){
+    tot2+=$(this).data('s');
+    //alert(tot2+'pwd--'+pwdinp.length)
+    })
+    if($('input[name=func]:checked').length>0){
+      tot3=1
+    }else{
+      tot3=0;
+      alert(strJson.public.functionchbox_warn)
+    }
+    totle=tot1+tot2+tot3;//用户名验证+密码验证data值
+  if(totle>len){//tot值等于验证input个数，执行新增并刷新列表
+    addUser();
+    getUserList();
+    $('#userListDiv').show();
+    $('#btnClone').attr('disabled',false);
+    $('#btnResetPsd').attr('disabled',false);
+    $('#btnDelet').attr('disabled',false);
+  }else{//不等于3，返回
+      return false 
+  }            
+}    
+//-----------------------------------------------------/////////////////////////////////////
+$(function(){
+  getUserList();
+  $('#btnAdd').click(function(){//新增用户按钮
+    $('#btnClone').attr('disabled','disabled');
+    $('#btnResetPsd').attr('disabled','disabled');
+    $('#btnDelet').attr('disabled','disabled');
+    $('#userListDiv').hide();
+    $('#creatUserDiv').show();//点击显示新增表单
+    $('#creatUserDiv input[name=username]').blur(function(){
+      val=this.value;
+      var userList=JSON.parse(MainWindow.GetUserList());
+      var keyarr=Object.keys(userList);
+      var reg=/^[a-zA-Z0-9_-]{3,16}$/.test(val);
+          //用户名正则，4到16位（字母，数字，下划线，减号）
+      if(val.length>0){
+        for(var h=0;h<keyarr.length;h++){
+          user=keyarr[h]; 
+          if(reg==true){
+              if(val!=user){
+                $(this).data({'s':1});//符合条件，s返回1
+                $(this).next().hide();
+              }else{
+                $(this).data({'s':0});//通过data赋值,不符合条件，s返回0
+                $(this).next().text(strJson.avt_users.exists_err);//用户名已存在
+                $(this).next().show();   
+                $(this).focus(); 
+              }
+          }else{
+            $(this).data({'s':0});//通过data赋值,不符合条件，s返回0
+            $(this).next().text(strJson.avt_users.value_err);//输入值格式不匹配
+            $(this).next().show();
+            $(this).focus();
+          }        
+        }
+      }else{
+      //输入值为空
+    
+        $(this).data({'s':0});
+        $(this).next().text(strJson.public.input_err);//请输入有效值,
+        $(this).next().show();
+        $(this).focus();
+      }
+  })
+  $('#creatUserDiv input[name=password]').blur(function(){
+      val=this.value;
+      var reg=/^[a-zA-Z0-9_-]{3,16}$/.test(val);
+      //alert(val.length);
+      if(val.length>0){
+        if(reg==true){
+          $(this).data({'s':1});//符合条件，s返回1
+          $(this).next().hide();
+        }else{
+          $(this).data({'s':0});//通过data赋值,不符合条件，s返回0
+          $(this).next().text(strJson.avt_users.value_err);//输入格式有误
+          $(this).next().show();
+        }
+      }else{
+        $(this).data({'s':0});
+        $(this).next().text(strJson.public.input_err);//请输入有效值
+        $(this).next().show();
+      }
+  })
+})
+$('#btnCreatOK').click(function(){//新增信息提交按钮
+  vatlidateNewUser()//表单校验
+})
+
+  $('#btnBack').click(function(){//取消按钮
+    $('#userList').show();
+    $('#userListDiv').show();
+    $('#creatUserDiv').hide();
+    $('input[type="checkbox"]').removeAttr('checked');
+    $('#btnClone').attr('disabled',false);
+    $('#btnResetPsd').attr('disabled',false);
+    $('#btnDelet').attr('disabled',false);
+    
+  })
+  
+  $('#btnClone').click(function(){//复制用户按钮
+    userClone();
+  })
+  $('#btnResetPsd').click(function(){//重置密码
+    restePassword()
+  })
+  $('#btnDelet').click(function(){//移除用户
+    deleteUser()
+  }) 
+  
+})
+</script>
+<body>
+
+    <div class="col-sm-12" >
+          <!-- 管理员账户，管理用户模块***************************************************** -->
+        <section id="manageUsers"  class="branch-section">
+          <div class="form-group" >
+            <button id="btnAdd" class="btn btn-default" data-locale="creatUser">新增</button>
+            <button id="btnClone" class="btn btn-default" data-locale="clone">复制</button>
+            <button id="btnResetPsd" class="btn btn-default" data-locale="resetPassword">重置密码</button>
+            <button id="btnDelet" class="btn btn-default" data-locale="removeUser">移除用户</button>
+          </div>
+          <!-- <p>用户列表</p> -->
+          <div id="userListDiv"  class="bs-docs-div">
+            <table id="userList" class="table table-striped" ></table>
+          </div>
+        </section>
+          <!-- <p>新增用户，提交用户信息</p> -->
+          <div id="creatUserDiv" class="form-horizontal" style="display: none">
+              <h4 class="title-header"><i class="glyphicon glyphicon-check small"></i> <span data-locale="baseInformation">基本信息</span></h4>
+              <section class=" branch-section">
+                <div class="form-horizontal col-sm-12">
+                  <div class="form-group">
+                    <label  class="control-label col-sm-2" data-locale="username">用户：</label>
+                    <div class="col-sm-8 col-sm-pull-2">  
+                      <input class="form-control" type="text" name="username" placeholder="请输入3到16位用户名" title="用户名组成可包含字母/数字/下划线/减号" >
+                      <span class="text-danger"></span>
+                    </div>
+                  </div>
+                  <div class="form-group">
+                    <label for="inputPassword" class="control-label col-sm-2" data-locale="password">密码：</label>
+                    <div class="col-sm-8 col-sm-pull-2"> 
+                      <input class="form-control" type="password" name="password" placeholder="请输入3到16位密码" title="密码组成可包含字母/数字/下划线/减号">
+                      <span class="text-danger"></span>   
+                    </div>
+                  </div>   
+                </div>            
+              </section>
+              <h4 class="title-header"><i class="glyphicon glyphicon-check small"></i> <span data-locale="UserRightsControl">用户权限控制</span></h4>
+              <section class="col-sm-12 branch-section">  
+                <div class="checkbox">
+                  <label class=""><input name="func" type="checkbox" ><span data-locale="correction">校准与修正</span></label>
+                </div>
+                <div class="checkbox">
+                  <label class=""><input name="func" type="checkbox" ><span data-locale="acquisition">数据采集</span></label>
+                </div>
+                <div class="checkbox">
+                  <label class=""><input name="func" type="checkbox" ><span data-locale="snSettings">序列号设置</span></label>
+                </div>
+                <div class="checkbox">
+                  <label class=""><input name="func" type="checkbox" ><span data-locale="saveData">保存显示</span></label>
+                </div>
+                <div class="checkbox">  
+                  <label class=""><input name="func" type="checkbox" ><span data-locale="dataFilter">分档设置</span></label>
+                </div>
+                <div class="checkbox">
+                  <label class=""><input name="func" type="checkbox" ><span data-locale="alarmSettings">报警设置</span></label>
+                </div>
+                <div class="checkbox">
+                  <label class=""><input name="func" type="checkbox" ><span data-locale="subDevice">外设</span></label>
+                </div>
+                <div class="checkbox">
+                  <label class=""><input name="func" type="checkbox" ><span data-locale="deviceInfo">设备信息</span></label>
+                </div>
+                <div class="checkbox">
+                  <label class=""><input name="func" type="checkbox" ><span data-locale="configPlan">配置方案</span></label>
+                </div>
+                <span class="text-danger"  data-locale="moduleSelection ">请选择功能模块！</span>
+                <p><br></p>
+              </section> 
+              <div class="form-group col-sm-10  text-right">
+                  <button id="btnCreatOK" type="button" class="btn btn-primary" data-locale="confirm">确定</button>
+                  <button id="btnBack" class="btn btn-default" data-locale="cancel">取消</button>
+              </div>
+              
+          </div>
+    </div>
+</body>
+</html>
