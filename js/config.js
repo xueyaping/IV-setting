@@ -7,5 +7,5 @@ function tabsSwitch(){
     }
 }
 $(function(){
-    tabsSwitch()
+   // tabsSwitch()
 })
