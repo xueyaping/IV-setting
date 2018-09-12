@@ -89,8 +89,10 @@
 
             //-------------------判断选择的参数是否已存在于数组中---------
                     if(txts[k].parm==dataArr.parm){
-                        alert(dataArr.parm+'----已存在')
-
+                      
+                        layer.msg(strJson.public.exists, {
+                            icon:0
+                        });
                        // alert(view.index( this ))
                         $('#dataview p').eq(indx).text(datas)
                         yn=false 

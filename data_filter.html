@@ -77,7 +77,9 @@ function currFilter(){
 
     var mObjectStr = MainWindow.GetGradeInfo();
     if(mObjectStr=="undefined"||mObjectStr==""){
-       alert('当前模块未设置')
+        layer.msg(strJson.public.config_no, {
+        icon:0
+     });
     }else{
         $('#getData').empty();
         var mObject = JSON.parse(MainWindow.GetGradeInfo());

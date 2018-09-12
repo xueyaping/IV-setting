@@ -195,7 +195,9 @@ function applyConfig(){
         otherChbox.removeAttr("class","text-muted");
         configAppTR.attr("class","text-muted");//改变颜色
         //alert(strJson.public.sucess);
-
+        layer.msg(strJson.public.sucess, {
+                icon:1
+            });
         //----------------------操作日志----------------
         var modeltitle=$('.dis').children('h4').text();
         var title=strJson.strings.log_user+curUserInfo.user+strJson.strings.log_do+modeltitle+strJson.strings.log_module+'；'
@@ -339,8 +341,9 @@ $(function(){
          
         </div>
           <!-- <p>新增配方</p> -->
-          <div class="divider"><hr></div>
+       
          <div id="addConfigDiv"  class="bs-docs-div col-md-6" style="display: none">
+            <div class="divider"><hr></div>
             <div class="form-group ">
               <input id="configName" type="text" maxlength="20" placeholder="请输入配方名" class="form-control " >
             </div>

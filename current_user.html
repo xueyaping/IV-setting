@@ -95,7 +95,7 @@ function userPwdModify(){//
         MainWindow.WriteSetLog(JSON.stringify(USER_LOG))//写入日志数据库
      
     }else{
-      alert(strJson.public.failed);
+     // alert(strJson.public.failed);
         layer.msg(strJson.public.failed, {
           icon:2
         });
@@ -141,7 +141,7 @@ $(function(){
       }
     }else{
       $(this).data({'s':0});//符合条件，s返回1
-      alert($(this).next().text(strJson.public.new_password));
+      $(this).next().text(strJson.public.new_password);
       $(this).next().show();
     }
 
