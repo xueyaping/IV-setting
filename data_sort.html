@@ -45,9 +45,10 @@ span.text-danger{display: none}
   <script>
     var i=0,h=0,resFile=[],resView=[];
     function getDatas(){//从数据库读取参数
+
       paramsJson=JSON.parse(MainWindow.GetRaname());
       keyArr=Object.keys(paramsJson);
-     // alert(keyArr);
+
       for(var i=0;i<keyArr.length;i++){
        var key=keyArr[i];
        byname=paramsJson[key].byname

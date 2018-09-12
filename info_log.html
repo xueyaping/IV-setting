@@ -47,13 +47,14 @@
   //---------------------------------获取日志总数----------------------------------------
   function getLogLength(){
     loglen=0;
-    var logdatas="content"
+    var logdatas="content";
     while (logdatas!=""){  
        loglen++;
        logdatas= MainWindow.ReadSetLogP(loglen);
       //  dataArr[j++]=logdatas
     }//数据库不为空时，执行循环读取数据库，得到日志总行数loglen-1(减去初始化一次)
-    if(loglen-1>1){
+    getLanguage =MainWindow.GetLanguage();
+    if(loglen-1>1&&getLanguage=='EN'){
       log_page=log_page+'s';
       log_record=log_record+'s';
     }

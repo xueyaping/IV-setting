@@ -22,8 +22,6 @@
     <script src="./js/bootstrap.min.js"></script>
     <script src="./js/vue.min.js"></script>
     <script src="./js/layer/layer.js"></script>
-    <script src="./js/qrcode.min.js"></script>
-    <script src="./js/config.js"></script>
     <script type="text/javascript">
     //禁止页面右键
         // document.oncontextmenu=new Function("event.returnValue=false;");
@@ -185,6 +183,7 @@ a.list-group-item:focus,.on{background:rgb(255, 255, 255);margin-right:-1px}
             }); 
            
             //--placeholder国际化 
+ 
             $("input[name=username]").each(function(){
                 $("input[name=username]").attr("placeholder",$.i18n.prop('username'));
             })
@@ -197,7 +196,10 @@ a.list-group-item:focus,.on{background:rgb(255, 255, 255);margin-right:-1px}
             $("#pwdModify").attr("placeholder",$.i18n.prop('pwdModify_inputStr'));//修改密码
             $("#fileNameVal").attr("placeholder",$.i18n.prop('filename_inputStr'));//自定义文件名
             $("#configName").attr("placeholder",$.i18n.prop('planName_inputStr'));//配方名
-           $("textarea[title]").each(function(){//分档范围title说明
+            $("#configNameTage1").attr("placeholder",$.i18n.prop('tageInputStr1'));
+            $("#configNameTage2").attr("placeholder",$.i18n.prop('tageInputStr2'));
+            $("#configNameTage3").attr("placeholder",$.i18n.prop('tageInputStr3'));
+            $("textarea[title]").each(function(){//分档范围title说明
                 $(this).attr("title",$.i18n.prop('datasTitle'));
             })
             $("#selectDiv").attr("title",$.i18n.prop('parameterListTilte'));
@@ -227,6 +229,7 @@ a.list-group-item:focus,.on{background:rgb(255, 255, 255);margin-right:-1px}
                     public:{     
                         sucess:'操作成功',
                         failed:'初始配置，无法删除!',
+                        exists:'对象已存在',
                         input_err:'请输入有效值',
                         config_applied:'当前配方应用中!',
                         chbox_warn:'请选择操作对象!',
@@ -248,7 +251,7 @@ a.list-group-item:focus,.on{background:rgb(255, 255, 255);margin-right:-1px}
                         log_create:'已创建',
                         log_psdReset:'密码已重置',
                         log_psdChanged:'密码已修改',
-                        log_totle:' 共',
+                        log_total:' 共',
                         log_page:'页',
                         log_record:'记录'
                     }
@@ -277,8 +280,9 @@ a.list-group-item:focus,.on{background:rgb(255, 255, 255);margin-right:-1px}
                     public:{
                         sucess:'Operation successfully!',
                         failed:'Operation failed',
+                        exists:'The object already exists',
                         input_err:'Please enter valid values',
-                        config_applied:'The object is beinlsg applied!',
+                        config_applied:'The object is being applied!',
                         chbox_warn:'Please checked the object',
                         reset_warn:'Operation failed, The administrator password cannot be reset',
                         functionchbox_warn:'Please check the function module',
@@ -298,7 +302,7 @@ a.list-group-item:focus,.on{background:rgb(255, 255, 255);margin-right:-1px}
                         log_create:' has been created!',
                         log_psdReset:' Password has been reset!',
                         log_psdChanged:' modify the password!',
-                        log_total:' Total ',
+                        log_total:'Total ',
                         log_page:' page',
                         log_record:' record'
                     }

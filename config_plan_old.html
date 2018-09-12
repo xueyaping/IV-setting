@@ -44,6 +44,7 @@ function getConfigList(){
   var configList = JSON.parse(MainWindow.GetConfigList());//配方列表接口
   var configArr=Object.keys(configList);//获得索引对象（配方）Key
   var curConfig=MainWindow.GetCurConfig();//当前配方接口
+  
     for(var i=0;i<configArr.length;i++){
         key=configArr[i]//对象索引
         // chkbox="<label><input name='configChbx' type='checkbox' class='chkbox'></label>";
@@ -51,17 +52,13 @@ function getConfigList(){
         // TD2="<td class='caseName'>"+configList[key].name+"<td>";
         // TR="<tr id='configTR'>"+TD1+TD2+"</tr>";
         //$(TR).appendTo("#configList"); 
-      
-        keyJson=JSON.parse(configList[key].name);
-
-       // alert("ok"+keyJson.name);
-        chkbox="<label>"+"<input name='configChbx' type='checkbox' class='chkbox' style='margin-right:5px'>"+keyJson.name+"</label>";
-        TD1="<td class='planName'>"+chkbox+"<td>";
-        TD2="<td class='planNameTage1'>"+keyJson.tage1+" "+keyJson.tage2+" "+keyJson.tage3+"<td>";
-
-        TR="<tr id='configTR'>"+TD1+TD2+"</tr>";
+       
+        chkbox="<label>"+"<input name='configChbx' type='checkbox' class='chkbox' style='margin-right:5px'>"+configList[key].name+"</label>";
+        TD="<td class='caseName'>"+chkbox+"<td>";
+        TR="<tr id='configTR'>"+TD+"</tr>";
         $(TR).appendTo("#configList");
         $("#configList tr").each(function(){
+         // alert($(this).find('label').children().is(":checked"));
          planName=$(this).find('label').text();
           if(curConfig==planName){
             //alert( $(this).find('input[name=configChbx]').html()+"----"+curConfig);
@@ -70,6 +67,7 @@ function getConfigList(){
           }
         })
         
+        
     }
     checkboxSingle();
 
@@ -77,15 +75,10 @@ function getConfigList(){
   
 //-----------------------------新增配方----------------------------////////////
 function addConfig(){
-
   var inputVal=$('#configName').val();
-  var nameTage1=$('#configNameTage1').val();
-  var nameTage2=$('#configNameTage2').val();
-  var nameTage3=$('#configNameTage3').val();
-  planNameJson={name:inputVal,tage1:nameTage1,tage2:nameTage2,tage3:nameTage3};
   if(inputVal!==''){
-  // alert(inputVal);
-    cofigObj=MainWindow.AddConfigTable(JSON.stringify(planNameJson));//注意：输入不能以数组开头
+   // alert(inputVal);
+    cofigObj=MainWindow.AddConfigTable(inputVal);//注意：输入不能以数组开头
     if(cofigObj==1){
      // alert(strJson.public.sucess);
       $("#addConfigDiv").hide();
@@ -101,11 +94,9 @@ function addConfig(){
       };
       MainWindow.WriteSetLog(JSON.stringify(CASE_LOG))//写入日志数据库
 
-    }else if(cofigObj==0){
-      alert(strJson.public.exists);
-      
     }else{
       alert(strJson.public.failed);
+      
     }
   }
 }
@@ -115,18 +106,7 @@ function delConfig(){
   var curConDelfig = MainWindow.GetCurConfig(); 
   var configDelChked=$('#configList input[type=checkbox]:checked');
   var configDelTR=configDelChked.parents("tr");
-  var configDelTRStr=configDelTR.text();
-  nameStr=configDelTR.find("label").text();//配方名
-  tageStr=configDelTR.find('td').eq(2).text();
-
- //分割标签，存为JSON
-  var tageArr=[];
-  var delPlanJson={};
-  tageArr=tageStr.split(" ");
-  delPlanJson={name:nameStr,tage1:tageArr[0],tage2:tageArr[1],tage3:tageArr[2]};
-
-  var configDelName=delPlanJson.name;
-  //alert(configDelName);
+  var configDelName=configDelTR.find("label").text();
       if(configDelName=='DefaultConfig'){
         //alert(strJson.public.failed)
         layer.msg(strJson.public.failed, {
@@ -142,9 +122,7 @@ function delConfig(){
         layer.confirm(strJson.public.del_confirm, {
             btn: [strJson.public.confirm_yes,strJson.public.confirm_no] //按钮
           }, function(){//确定执行删除操作
-          
-            var DelStr = MainWindow.DelConfigTable(JSON.stringify(delPlanJson));
-            //alert(JSON.stringify(delPlanJson));
+            var DelStr = MainWindow.DelConfigTable(configDelName);
             if(DelStr==1){
             //alert(strJson.public.sucess);
             layer.msg(strJson.public.sucess, {
@@ -163,7 +141,8 @@ function delConfig(){
               MainWindow.WriteSetLog(JSON.stringify(CASE_LOG))//写入日志数据库
             }
 
-         
+          }, function(){
+            getConfigList();
         });
 
         
@@ -339,23 +318,8 @@ $(function(){
          
         </div>
           <!-- <p>新增配方</p> -->
-          <div class="divider"><hr></div>
-         <div id="addConfigDiv"  class="bs-docs-div col-md-6" style="display: none">
-            <div class="form-group ">
-              <input id="configName" type="text" maxlength="20" placeholder="请输入配方名" class="form-control " >
-            </div>
-            <div class="form-group ">
-              <input id="configNameTage1" type="text" maxlength="20" placeholder="配方备注1" class="form-control " >
-            </div>
-            <div class="form-group ">
-              <input id="configNameTage2" type="text" maxlength="20" placeholder="配方备注2" class="form-control " >
-            </div>
-            <div class="form-group ">
-              <input id="configNameTage3" type="text" maxlength="20" placeholder="配方备注3" class="form-control " > 
-            </div>
-            <div class="form-group ">
-              <input id="btn_AddconfigOK" type="button" value="ok" class="btn btn-primary"><span class="glyphicon glyhicon-ok text-sucess"></span>
-            </div>
+         <div id="addConfigDiv"  class="bs-docs-div" style="display: none">
+            <p class="form-inline"><input id="configName" type="text" maxlength="20" placeholder="请输入配方名" class="form-control " > <input id="btn_AddconfigOK" type="button" value="ok" class="btn btn-primary"><span class="glyphicon glyhicon-ok text-sucess"></span></p>
         </div>
         <!-- <p>配方列表</p> -->
         <div id="configListDiv"  class="bs-docs-div">

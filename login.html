@@ -8,8 +8,9 @@
     <link rel="stylesheet" href="./css/bootstrap.min.css" >
    <!--  <link rel="stylesheet" href="./css/jquery-ui.css"> -->
     <script src="./js/jquery-1.12.4.js"></script>
-    <script src="./js/layer/layer.js"></script>
-
+	    <script src="./js/layer/layer.js"></script>
+  <!--   <script src="./js/jquery-ui.js"></script>
+    <script src="./js/FileSaver.min.js"></script> -->
    
     <title>用户登录</title>
     <style>
@@ -35,11 +36,12 @@
 </style>
 </head>
 <script>
-  var userInfo={};
- 
+
   function tips(tipsTxt,n){
     layer.msg(tipsTxt,{icon:n})
   }
+
+  var userInfo={}
   function login(){
    user= $("input[name=username]");
    psd=$("input[name=password]");

@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    
     <!-- <link rel="stylesheet" href="./css/bootstrap.min.css"> -->
    <!--  <link rel="stylesheet" href="./css/jquery-ui.css"> -->
   <!--   <script src="js/bootstrap.min.js"></script> -->
@@ -103,30 +104,10 @@ function userPwdModify(){//
     }
   }
 }
-function qrCode(){   //生成二维码         
-      // 设置参数方式
-      var qrcode = new QRCode(document.getElementById("qrCode"),  {
-        // render: "canvas||table",
-       // text: URL,
-        width: 180,
-        height: 180,
-        // colorDark : '#000000',
-        // colorLight : '#ffffff',
-        // correctLevel : QRCode.CorrectLevel.H
-      });
-      function makeCode () {
-        var devID=['9A','10A','20A+'];
-        var URL='http://www.gsola.cn/API/CSM/';
-        qrcode.makeCode(URL+devID[0]);
-      }
-      makeCode();
-      var margin = ($("#qrCode").height() - $("#qrimg").height()) / 2; //控制Logo图标的位置
-      $("#qrimg").css("margin", margin);
-}
+
 
 $(function(){
   getCurUserInfo(); //获取当前用户信息
-  qrCode();//二维码
   $('input[name=pwdModify]').blur(function(){
     val=this.value;
     var reg=/^[a-zA-Z0-9_-]{4,16}$/.test(val);
@@ -207,11 +188,8 @@ $(function(){
           </div>
 
 
-          <div id="qrCode">
-              <img id="qrimg"  src="./images/logo-code.png"
-              style="position: absolute;width: 40px; height: 40px;"  >
-              
-          </div>
+      
+         
         </div>
    
    
