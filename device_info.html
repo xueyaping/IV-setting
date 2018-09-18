@@ -88,6 +88,23 @@ function infoLog(){
                         <label class="checkbox-inline"><input type="checkbox"  v-model="update"> <span data-locale="dataUpload">数据上传</span></label>
                     </div>
             </div>
+        </section>
+        <h4 class="title-header"><i class="glyphicon glyphicon-check small"></i> <span data-locale="otherSettings">其它设置</span></h4>
+        <section class="branch-section col-sm-12">
+            <div class="form-group">
+                <div class="form-group">
+                    <label class="form-inline"><span data-locale="workSpace">车间编号</span> <input type="text" id="workSpace" v-model="workSpace" class="form-control" > </label>
+                </div>
+                <div class="form-group">
+                    <label class="form-inline"><span data-locale="deviceCode">设备编号</span> <input type="text" id="deviceCode" v-model="deviceCode" class="form-control" > </label>
+                </div>
+                <div class="form-group">
+                        <label class="form-inline"><span data-locale="subsetCode">子设备编号</span> <input type="text" id="subsetCode" v-model="subsetCode" class="form-control"></label>
+                    </div>
+                <div class="form-group">
+                    <label class="form-inline"><span data-locale="workId">进程ID</span> <input type="text" id="workId" v-model="workId" class="form-control" > </label>
+                </div>
+            </div>
             
             <div class="form-group col-sm-10  text-right">
                 <hr class="divider">
@@ -100,7 +117,7 @@ function infoLog(){
         loadProperties();//国际化
         var DEV_TXTSAVE;
         var info={device_status:'off',authorize_type:'永久',remain_time:"0",total_time:'100',run_time:'20分13秒',
-        flash:"20",warnval:"2000",counter:"190"};
+        flash:"20",warnval:"2000",counter:"190",};
        
         defaultSetStr = MainWindow.ConfigRead(8);//读取数据库
         //alert("dev"+defaultSetStr);
@@ -119,7 +136,11 @@ function infoLog(){
                         warnval:info.warnval,
                         counter:info.counter,
                         alarm_close:"true",
-                        update:"true"
+                        update:"true",
+                        workSpace:"",
+                        deviceCode:"",
+                        subsetCode:"",
+                        workId:"",
                 }
             };
             MainWindow.ConfigWrite(8,JSON.stringify(DEV_TXTSAVE));
@@ -142,8 +163,11 @@ function infoLog(){
                 warnval:defaultSet.device.warnval,
                 counter:defaultSet.device.counter,
                 alarm_close:defaultSet.device.alarm_close,
-                update:defaultSet.device.update
-
+                update:defaultSet.device.update,
+                workSpace:defaultSet.device.workSpace,
+                deviceCode:defaultSet.device.deviceCode,
+                subsetCode:defaultSet.device.subsetCode,
+                workId:defaultSet.device.workId,
             },
             methods: {
             flashReset:function(event){
@@ -165,7 +189,11 @@ function infoLog(){
                         warnval:this.warnval,
                         counter:this.counter,
                         alarm_close:this.alarm_close,
-                        update:this.update
+                        update:this.update,
+                        workSpace:this.workSpace,
+                        deviceCode:this.deviceCode,
+                        subsetCode:this.subsetCode,
+                        workId:this.workId,
                     }
                 
     
